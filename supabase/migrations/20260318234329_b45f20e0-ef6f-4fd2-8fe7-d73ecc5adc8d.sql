@@ -1,0 +1,1 @@
+ALTER TABLE public.pie_creators ADD COLUMN youtube_channel_id text;
