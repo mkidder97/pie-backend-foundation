@@ -14,7 +14,142 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      pie_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          created_at: string
+          embedding: string | null
+          episode_id: string
+          id: string
+        }
+        Insert: {
+          chunk_index: number
+          content: string
+          created_at?: string
+          embedding?: string | null
+          episode_id: string
+          id?: string
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          episode_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pie_chunks_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "pie_episodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pie_creators: {
+        Row: {
+          active: boolean | null
+          apple_podcast_id: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          name: string
+          rss_feed_url: string | null
+          source_type: Database["public"]["Enums"]["pie_source_type"]
+          updated_at: string
+          youtube_channel_handle: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          apple_podcast_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          name: string
+          rss_feed_url?: string | null
+          source_type: Database["public"]["Enums"]["pie_source_type"]
+          updated_at?: string
+          youtube_channel_handle?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          apple_podcast_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          name?: string
+          rss_feed_url?: string | null
+          source_type?: Database["public"]["Enums"]["pie_source_type"]
+          updated_at?: string
+          youtube_channel_handle?: string | null
+        }
+        Relationships: []
+      }
+      pie_episodes: {
+        Row: {
+          created_at: string
+          creator_id: string
+          duration_seconds: number | null
+          id: string
+          metadata: Json | null
+          notion_page_id: string | null
+          published_at: string | null
+          raw_transcript: string | null
+          source_guid: string
+          source_type: Database["public"]["Enums"]["pie_source_type"] | null
+          source_url: string
+          status: Database["public"]["Enums"]["pie_episode_status"]
+          structured_summary: Json | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          duration_seconds?: number | null
+          id?: string
+          metadata?: Json | null
+          notion_page_id?: string | null
+          published_at?: string | null
+          raw_transcript?: string | null
+          source_guid: string
+          source_type?: Database["public"]["Enums"]["pie_source_type"] | null
+          source_url: string
+          status?: Database["public"]["Enums"]["pie_episode_status"]
+          structured_summary?: Json | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          duration_seconds?: number | null
+          id?: string
+          metadata?: Json | null
+          notion_page_id?: string | null
+          published_at?: string | null
+          raw_transcript?: string | null
+          source_guid?: string
+          source_type?: Database["public"]["Enums"]["pie_source_type"] | null
+          source_url?: string
+          status?: Database["public"]["Enums"]["pie_episode_status"]
+          structured_summary?: Json | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pie_episodes_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "pie_creators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +158,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      pie_episode_status:
+        | "pending"
+        | "transcribing"
+        | "processing"
+        | "completed"
+        | "failed"
+      pie_source_type: "rss" | "youtube" | "both"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +291,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      pie_episode_status: [
+        "pending",
+        "transcribing",
+        "processing",
+        "completed",
+        "failed",
+      ],
+      pie_source_type: ["rss", "youtube", "both"],
+    },
   },
 } as const
