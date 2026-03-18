@@ -61,6 +61,7 @@ export type Database = {
           source_type: Database["public"]["Enums"]["pie_source_type"]
           updated_at: string
           youtube_channel_handle: string | null
+          youtube_channel_id: string | null
         }
         Insert: {
           active?: boolean | null
@@ -73,6 +74,7 @@ export type Database = {
           source_type: Database["public"]["Enums"]["pie_source_type"]
           updated_at?: string
           youtube_channel_handle?: string | null
+          youtube_channel_id?: string | null
         }
         Update: {
           active?: boolean | null
@@ -85,6 +87,7 @@ export type Database = {
           source_type?: Database["public"]["Enums"]["pie_source_type"]
           updated_at?: string
           youtube_channel_handle?: string | null
+          youtube_channel_id?: string | null
         }
         Relationships: []
       }
