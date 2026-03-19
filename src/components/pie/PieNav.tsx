@@ -1,9 +1,14 @@
 import { NavLink } from "@/components/NavLink";
+import { LayoutDashboard, Rss, Hammer, Wrench, Search, MessageSquare, Users } from "lucide-react";
 
 const links = [
-  { to: "/feed", label: "Feed" },
-  { to: "/build", label: "Build" },
-  { to: "/tools", label: "Tools" },
+  { to: "/dashboard", label: "Briefing", icon: LayoutDashboard },
+  { to: "/feed", label: "Feed", icon: Rss },
+  { to: "/build", label: "Build", icon: Hammer },
+  { to: "/tools", label: "Tools", icon: Wrench },
+  { to: "/search", label: "Search", icon: Search },
+  { to: "/relay", label: "Relay", icon: MessageSquare },
+  { to: "/creators", label: "Creators", icon: Users },
 ];
 
 const PieNav = () => {
@@ -13,17 +18,21 @@ const PieNav = () => {
         <span className="font-mono-pie text-sm font-bold tracking-widest text-primary">
           PIE
         </span>
-        <div className="flex gap-1">
-          {links.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className="rounded px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-              activeClassName="bg-accent text-foreground"
-            >
-              {link.label}
-            </NavLink>
-          ))}
+        <div className="flex gap-1 overflow-x-auto">
+          {links.map((link) => {
+            const Icon = link.icon;
+            return (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className="flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground whitespace-nowrap"
+                activeClassName="bg-accent text-foreground"
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span className="hidden sm:inline">{link.label}</span>
+              </NavLink>
+            );
+          })}
         </div>
       </div>
     </nav>
