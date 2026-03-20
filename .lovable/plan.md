@@ -1,38 +1,17 @@
 
 
-## Insert 13 New RSS Creators
+## Update TypeScript Types for New Summary Fields
 
-**Current state:** 6 creators already in the database (3 YouTube, 3 both). Pipeline has 350 pending, 1 completed, 1 failed.
+Add `HorizonItem` and `IndustryShift` interfaces to `src/types/pie.ts` and extend `StructuredSummary` with two optional arrays.
 
-**What needs to happen:** Insert 13 new RSS-only creators into `pie_creators`. The read-only query tool cannot run INSERT statements, so this requires switching to implementation mode.
+### Changes
 
-### Implementation
+**File: `src/types/pie.ts`**
+- Add `HorizonItem` interface with fields: `feature`, `source`, `timeline` (union type), `why_it_matters`
+- Add `IndustryShift` interface with fields: `shift`, `evidence`
+- Add `on_the_horizon?: HorizonItem[]` and `industry_shifts?: IndustryShift[]` to `StructuredSummary`
 
-**Single step:** Use the Supabase client via an edge function or direct insert to add all 13 creators:
-
-- The Rundown AI
-- TLDR AI
-- Ben's Bites
-- One Useful Thing
-- Latent Space
-- Anthropic News
-- Import AI
-- Product Hunt Daily
-- Hacker News launches
-- OpenAI Blog
-- Google DeepMind Blog
-- The Verge AI
-- MIT Technology Review AI
-
-All will be inserted as `source_type: 'rss'` with their respective `rss_feed_url` values and `active: true`.
-
-### Verification
-
-After insert, run the two verification queries:
-1. Confirm all 19 creators appear (6 existing + 13 new)
-2. Pipeline health check across source types
-
-### Note on Query 4 (Reset Failed)
-
-The failed episode reset (`UPDATE ... SET status = 'pending' WHERE status = 'failed'`) will also be executed. You mentioned only running this after the n8n workflow fix is confirmed — approve the plan and I'll execute all operations.
+**File: `src/components/pie/EpisodeDetail.tsx`**
+- Update the fallback default in `EpisodeDetail` to include `on_the_horizon: []` and `industry_shifts: []`
+- No new UI sections yet — just ensure the component doesn't break with the new optional fields
 
