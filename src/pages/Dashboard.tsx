@@ -168,7 +168,7 @@ const Dashboard = () => {
     <div className="space-y-8">
       {/* Section 1: Stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard icon={Clock} value={ep48.length} label="New Episodes (48h)" loading={loading48} />
+        <StatCard icon={Clock} value={ep14d.length} label="Episodes (14d)" loading={loading14d} />
         <StatCard icon={Lightbulb} value={countBuildIdeas(ep7d)} label="Build Ideas (7d)" loading={loading7d} />
         <StatCard icon={Zap} value={countAutomations(ep7d)} label="Automations (7d)" loading={loading7d} />
         <StatCard icon={Wrench} value={countUniqueTools(ep7d)} label="Tools Tracked (7d)" loading={loading7d} />
