@@ -5,15 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Clock, Lightbulb, Zap, Wrench } from "lucide-react";
-import { subDays, subHours } from "date-fns";
+import { subDays } from "date-fns";
 
 const now = () => new Date();
 
-const usePieEpisodes = (hoursAgo: number, queryKey: string) =>
+const usePieEpisodes = (daysAgo: number, queryKey: string) =>
   useQuery({
     queryKey: [queryKey],
     queryFn: async () => {
-      const since = subHours(now(), hoursAgo).toISOString();
+      const since = subDays(now(), daysAgo).toISOString();
       const { data, error } = await supabase
         .from("pie_episodes")
         .select("id, title, source_url, source_type, published_at, status, structured_summary, creator_id, pie_creators(name)")
@@ -153,22 +153,22 @@ function StatCard({ icon: Icon, value, label, loading }: { icon: React.ElementTy
 
 // --- Main ---
 const Dashboard = () => {
-  const { data: recent48h, isLoading: loading48 } = usePieEpisodes(48, "pie-dashboard-48h");
-  const { data: recent7d, isLoading: loading7d } = usePieEpisodes(168, "pie-dashboard-7d");
+  const { data: recent14d, isLoading: loading14d } = usePieEpisodes(14, "pie-dashboard-14d");
+  const { data: recent7d, isLoading: loading7d } = usePieEpisodes(7, "pie-dashboard-7d");
 
-  const ep48 = recent48h ?? [];
+  const ep14d = recent14d ?? [];
   const ep7d = recent7d ?? [];
 
-  const matters = extractMatters(ep48);
+  const matters = extractMatters(ep14d, 5);
   const trending = extractTrendingTools(ep7d);
 
-  const isEmpty = !loading48 && !loading7d && ep48.length === 0 && ep7d.length === 0;
+  const isEmpty = !loading14d && !loading7d && ep14d.length === 0 && ep7d.length === 0;
 
   return (
     <div className="space-y-8">
       {/* Section 1: Stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard icon={Clock} value={ep48.length} label="New Episodes (48h)" loading={loading48} />
+        <StatCard icon={Clock} value={ep14d.length} label="Episodes (14d)" loading={loading14d} />
         <StatCard icon={Lightbulb} value={countBuildIdeas(ep7d)} label="Build Ideas (7d)" loading={loading7d} />
         <StatCard icon={Zap} value={countAutomations(ep7d)} label="Automations (7d)" loading={loading7d} />
         <StatCard icon={Wrench} value={countUniqueTools(ep7d)} label="Tools Tracked (7d)" loading={loading7d} />
@@ -183,12 +183,12 @@ const Dashboard = () => {
       )}
 
       {/* Section 2: What Matters Right Now */}
-      {(loading48 || matters.length > 0) && (
+      {(loading14d || matters.length > 0) && (
         <section>
           <h2 className="font-mono-pie text-sm font-bold text-foreground mb-3 tracking-wide">
             What Matters Right Now
           </h2>
-          {loading48 ? (
+          {loading14d ? (
             <div className="space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="h-20 w-full" />
