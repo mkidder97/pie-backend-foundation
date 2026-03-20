@@ -6,10 +6,27 @@ import type { PieEpisode, StructuredSummary } from "@/types/pie";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import EpisodeDetail from "@/components/pie/EpisodeDetail";
+
+type SourceFilter = "all" | "youtube" | "rss";
+
+export function getSourceBadge(episode: Pick<PieEpisode, "source_type" | "pie_creators">) {
+  const creatorName = episode.pie_creators?.name ?? "";
+  const isChangelog = /news|blog|changelog/i.test(creatorName);
+
+  if (isChangelog && episode.source_type === "rss") {
+    return { label: "Changelog", className: "border-purple-500/40 text-purple-400" };
+  }
+  if (episode.source_type === "youtube") {
+    return { label: "Video", className: "border-rose-500/40 text-rose-400" };
+  }
+  return { label: "Newsletter", className: "border-blue-500/40 text-blue-400" };
+}
 
 const Feed = () => {
   const [selected, setSelected] = useState<PieEpisode | null>(null);
+  const [filter, setFilter] = useState<SourceFilter>("all");
 
   const { data: episodes, isLoading } = useQuery({
     queryKey: ["pie-episodes-feed"],
@@ -22,6 +39,11 @@ const Feed = () => {
       if (error) throw error;
       return data as unknown as PieEpisode[];
     },
+  });
+
+  const filtered = episodes?.filter((ep) => {
+    if (filter === "all") return true;
+    return ep.source_type === filter;
   });
 
   if (isLoading) {
@@ -42,13 +64,34 @@ const Feed = () => {
     );
   }
 
+  const filters: { value: SourceFilter; label: string }[] = [
+    { value: "all", label: "All" },
+    { value: "youtube", label: "Video" },
+    { value: "rss", label: "Newsletter" },
+  ];
+
   return (
     <>
+      <div className="mb-4 flex gap-1">
+        {filters.map((f) => (
+          <Button
+            key={f.value}
+            size="sm"
+            variant={filter === f.value ? "default" : "outline"}
+            className="h-7 px-3 text-xs"
+            onClick={() => setFilter(f.value)}
+          >
+            {f.label}
+          </Button>
+        ))}
+      </div>
+
       <div className="space-y-3">
-        {episodes.map((ep) => {
+        {filtered?.map((ep) => {
           const s = ep.structured_summary as StructuredSummary | null;
           const summary = s?.executive_summary?.slice(0, 3) ?? [];
           const buildCount = s?.build_this_week?.length ?? 0;
+          const badge = getSourceBadge(ep);
 
           return (
             <Card
@@ -63,8 +106,8 @@ const Feed = () => {
                       <span className="text-xs font-medium text-muted-foreground">
                         {ep.pie_creators?.name ?? "Unknown"}
                       </span>
-                      <Badge variant="outline" className="text-[10px]">
-                        {ep.source_type === "youtube" ? "YouTube" : "RSS"}
+                      <Badge variant="outline" className={`text-[10px] ${badge.className}`}>
+                        {badge.label}
                       </Badge>
                       {ep.published_at && (
                         <span className="text-[10px] text-muted-foreground">
