@@ -11,6 +11,7 @@ import Tools from "@/pages/Tools";
 import SearchPage from "@/pages/SearchPage";
 import Relay from "@/pages/Relay";
 import Creators from "@/pages/Creators";
+import Admin from "@/pages/Admin";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/search" element={<SearchPage />} />
             <Route path="/relay" element={<Relay />} />
             <Route path="/creators" element={<Creators />} />
+            <Route path="/admin" element={<Admin />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
