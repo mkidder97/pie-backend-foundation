@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { PieEpisode, StructuredSummary, ToolMentioned, AutomationOpportunity } from "@/types/pie";
+import type { PieEpisode, StructuredSummary, ToolMentioned, AutomationOpportunity, HorizonItem } from "@/types/pie";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, Lightbulb, Zap, Wrench } from "lucide-react";
+import { Clock, Lightbulb, Zap, Wrench, Radar } from "lucide-react";
 import { subDays } from "date-fns";
 
 const now = () => new Date();
@@ -49,45 +49,51 @@ function countUniqueTools(episodes: PieEpisode[]) {
   return names.size;
 }
 
-// --- "What Matters" item type ---
-interface MatterItem {
-  type: "Insight" | "Build" | "Automation";
+// --- "What Matters" uses actionable_insights from 14d ---
+interface InsightItem {
   text: string;
-  complexity?: string;
   creator: string;
   episode: string;
 }
 
-function extractMatters(episodes: PieEpisode[], limit = 12): MatterItem[] {
-  const items: MatterItem[] = [];
-
-  // Priority 1: actionable_insights
+function extractInsights(episodes: PieEpisode[], limit = 5): InsightItem[] {
+  const items: InsightItem[] = [];
   for (const ep of episodes) {
     const s = ep.structured_summary as StructuredSummary | null;
     const creator = ep.pie_creators?.name ?? "Unknown";
     s?.actionable_insights?.forEach((text) =>
-      items.push({ type: "Insight", text, creator, episode: ep.title })
+      items.push({ text, creator, episode: ep.title })
     );
   }
+  return items.slice(0, limit);
+}
 
-  // Priority 2: build_this_week
+// --- Coming Soon: top on_the_horizon from 7d ---
+interface ComingSoonItem {
+  feature: string;
+  timeline: HorizonItem["timeline"];
+  why_it_matters: string;
+  creator: string;
+}
+
+const TIMELINE_ORDER: Record<string, number> = { days: 0, weeks: 1, months: 2, unknown: 3 };
+const TIMELINE_STYLE: Record<string, string> = {
+  days: "border-rose-500/40 text-rose-400",
+  weeks: "border-yellow-500/40 text-yellow-400",
+  months: "border-emerald-500/40 text-emerald-400",
+  unknown: "border-muted-foreground/40 text-muted-foreground",
+};
+
+function extractComingSoon(episodes: PieEpisode[], limit = 3): ComingSoonItem[] {
+  const items: ComingSoonItem[] = [];
   for (const ep of episodes) {
     const s = ep.structured_summary as StructuredSummary | null;
     const creator = ep.pie_creators?.name ?? "Unknown";
-    s?.build_this_week?.forEach((text) =>
-      items.push({ type: "Build", text, creator, episode: ep.title })
+    s?.on_the_horizon?.forEach((h) =>
+      items.push({ feature: h.feature, timeline: h.timeline, why_it_matters: h.why_it_matters, creator })
     );
   }
-
-  // Priority 3: automation_opportunities
-  for (const ep of episodes) {
-    const s = ep.structured_summary as StructuredSummary | null;
-    const creator = ep.pie_creators?.name ?? "Unknown";
-    s?.automation_opportunities?.forEach((a: AutomationOpportunity) =>
-      items.push({ type: "Automation", text: a.idea, complexity: a.complexity, creator, episode: ep.title })
-    );
-  }
-
+  items.sort((a, b) => (TIMELINE_ORDER[a.timeline] ?? 3) - (TIMELINE_ORDER[b.timeline] ?? 3));
   return items.slice(0, limit);
 }
 
@@ -125,13 +131,6 @@ function extractTrendingTools(episodes: PieEpisode[], limit = 8): TrendingTool[]
     .slice(0, limit);
 }
 
-// --- Badge color by type ---
-const typeBadgeVariant: Record<MatterItem["type"], string> = {
-  Insight: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  Build: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-  Automation: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-};
-
 // --- Stat card ---
 function StatCard({ icon: Icon, value, label, loading }: { icon: React.ElementType; value: number; label: string; loading: boolean }) {
   return (
@@ -159,8 +158,9 @@ const Dashboard = () => {
   const ep14d = recent14d ?? [];
   const ep7d = recent7d ?? [];
 
-  const matters = extractMatters(ep14d, 5);
+  const insights = extractInsights(ep14d, 5);
   const trending = extractTrendingTools(ep7d);
+  const comingSoon = extractComingSoon(ep7d, 3);
 
   const isEmpty = !loading14d && !loading7d && ep14d.length === 0 && ep7d.length === 0;
 
@@ -183,7 +183,7 @@ const Dashboard = () => {
       )}
 
       {/* Section 2: What Matters Right Now */}
-      {(loading14d || matters.length > 0) && (
+      {(loading14d || insights.length > 0) && (
         <section>
           <h2 className="font-mono-pie text-sm font-bold text-foreground mb-3 tracking-wide">
             What Matters Right Now
@@ -196,21 +196,13 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {matters.map((item, i) => (
+              {insights.map((item, i) => (
                 <Card key={i} className="border-border bg-card">
-                  <CardContent className="flex items-start gap-3 p-4">
-                    <Badge className={`shrink-0 text-[10px] font-medium border ${typeBadgeVariant[item.type]}`}>
-                      {item.type}
-                    </Badge>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-mono-pie text-sm text-foreground leading-relaxed">{item.text}</p>
-                      {item.complexity && (
-                        <span className="text-[10px] text-muted-foreground">Complexity: {item.complexity}</span>
-                      )}
-                      <p className="mt-1 text-[11px] text-muted-foreground truncate">
-                        {item.creator} — {item.episode}
-                      </p>
-                    </div>
+                  <CardContent className="p-4">
+                    <p className="font-mono-pie text-sm text-foreground leading-relaxed">{item.text}</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground truncate">
+                      {item.creator} — {item.episode}
+                    </p>
                   </CardContent>
                 </Card>
               ))}
@@ -250,6 +242,37 @@ const Dashboard = () => {
               ))}
             </div>
           )}
+        </section>
+      )}
+
+      {/* Section 4: Coming Soon */}
+      {comingSoon.length > 0 && (
+        <section>
+          <h2 className="font-mono-pie text-sm font-bold text-foreground mb-3 tracking-wide flex items-center gap-2">
+            <Radar className="h-4 w-4 text-primary" />
+            Coming Soon
+          </h2>
+          <div className="space-y-2">
+            {comingSoon.map((item, i) => (
+              <Card key={i} className="border-border bg-card">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-semibold text-foreground">{item.feature}</span>
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] ${TIMELINE_STYLE[item.timeline] ?? TIMELINE_STYLE.unknown}`}
+                    >
+                      {item.timeline}
+                    </Badge>
+                  </div>
+                  <p className="font-mono-pie text-xs text-muted-foreground leading-relaxed">
+                    {item.why_it_matters}
+                  </p>
+                  <p className="mt-1 text-[10px] text-muted-foreground/70">{item.creator}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </section>
       )}
     </div>

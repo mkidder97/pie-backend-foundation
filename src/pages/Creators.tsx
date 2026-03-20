@@ -57,9 +57,9 @@ function computeStats(creators: Creator[], episodes: PieEpisode[]): CreatorStats
 }
 
 function SourceBadge({ type }: { type: string }) {
-  if (type === "youtube") return <Badge variant="secondary" className="text-[10px] gap-1"><Video className="h-3 w-3" />YouTube</Badge>;
-  if (type === "rss") return <Badge variant="secondary" className="text-[10px] gap-1"><Rss className="h-3 w-3" />RSS</Badge>;
-  return <Badge variant="secondary" className="text-[10px]">Both</Badge>;
+  if (type === "youtube") return <Badge variant="outline" className="text-[10px] gap-1 border-rose-500/40 text-rose-400"><Video className="h-3 w-3" />Video</Badge>;
+  if (type === "rss") return <Badge variant="outline" className="text-[10px] gap-1 border-blue-500/40 text-blue-400"><Rss className="h-3 w-3" />Newsletter</Badge>;
+  return <Badge variant="outline" className="text-[10px]">Both</Badge>;
 }
 
 const Creators = () => {
