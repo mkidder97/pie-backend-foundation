@@ -1,0 +1,1 @@
+ALTER TABLE public.pie_creators ADD COLUMN IF NOT EXISTS category text NOT NULL DEFAULT 'src_tools';

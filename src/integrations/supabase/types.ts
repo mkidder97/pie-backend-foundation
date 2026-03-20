@@ -53,6 +53,7 @@ export type Database = {
         Row: {
           active: boolean | null
           apple_podcast_id: string | null
+          category: string
           created_at: string
           id: string
           metadata: Json | null
@@ -66,6 +67,7 @@ export type Database = {
         Insert: {
           active?: boolean | null
           apple_podcast_id?: string | null
+          category?: string
           created_at?: string
           id?: string
           metadata?: Json | null
@@ -79,6 +81,7 @@ export type Database = {
         Update: {
           active?: boolean | null
           apple_podcast_id?: string | null
+          category?: string
           created_at?: string
           id?: string
           metadata?: Json | null
