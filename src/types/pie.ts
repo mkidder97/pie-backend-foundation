@@ -23,6 +23,18 @@ export interface StartupIdea {
   why_interesting: string;
 }
 
+export interface HorizonItem {
+  feature: string;
+  source: string;
+  timeline: 'days' | 'weeks' | 'months' | 'unknown';
+  why_it_matters: string;
+}
+
+export interface IndustryShift {
+  shift: string;
+  evidence: string;
+}
+
 export interface StructuredSummary {
   executive_summary: string[];
   key_ideas: KeyIdea[];
@@ -33,6 +45,8 @@ export interface StructuredSummary {
   startup_app_ideas: StartupIdea[];
   notable_quotes: string[];
   build_this_week: string[];
+  on_the_horizon?: HorizonItem[];
+  industry_shifts?: IndustryShift[];
 }
 
 export interface PieEpisode {
