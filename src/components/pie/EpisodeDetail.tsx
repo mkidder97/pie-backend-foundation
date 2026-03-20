@@ -63,8 +63,16 @@ const EpisodeDetail = ({ episode, open, onOpenChange }: EpisodeDetailProps) => {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader className="pb-4">
-          <SheetDescription className="text-xs text-muted-foreground">
+          <SheetDescription className="flex items-center gap-2 text-xs text-muted-foreground">
             {episode.pie_creators?.name}
+            {(() => {
+              const badge = getSourceBadge(episode);
+              return (
+                <Badge variant="outline" className={`text-[10px] ${badge.className}`}>
+                  {badge.label}
+                </Badge>
+              );
+            })()}
           </SheetDescription>
           <SheetTitle className="text-base font-semibold leading-snug">
             {episode.title}
