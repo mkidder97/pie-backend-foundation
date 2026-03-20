@@ -1,51 +1,38 @@
 
 
-## PIE — Podcast Intelligence Engine Dashboard
+## Insert 13 New RSS Creators
 
-### Overview
-Build a read-only, dark-themed intelligence dashboard with 3 pages (`/feed`, `/build`, `/tools`) plus a top navigation bar. All data comes from existing `pie_episodes` and `pie_creators` tables via the Supabase client.
+**Current state:** 6 creators already in the database (3 YouTube, 3 both). Pipeline has 350 pending, 1 completed, 1 failed.
 
-### Design System Changes
-**File: `src/index.css`** — Override the `.dark` theme variables to create a dark, minimal aesthetic. Set dark mode as default on the `<html>` tag in `index.html`. Add a monospace font utility class.
+**What needs to happen:** Insert 13 new RSS-only creators into `pie_creators`. The read-only query tool cannot run INSERT statements, so this requires switching to implementation mode.
 
-### Files to Create
+### Implementation
 
-1. **`src/components/pie/PieNav.tsx`** — Top navigation bar with "PIE" branding + Feed / Build / Tools links using NavLink for active state styling. Minimal, dark, no decorative elements.
+**Single step:** Use the Supabase client via an edge function or direct insert to add all 13 creators:
 
-2. **`src/components/pie/PieLayout.tsx`** — Layout wrapper with PieNav + outlet content area.
+- The Rundown AI
+- TLDR AI
+- Ben's Bites
+- One Useful Thing
+- Latent Space
+- Anthropic News
+- Import AI
+- Product Hunt Daily
+- Hacker News launches
+- OpenAI Blog
+- Google DeepMind Blog
+- The Verge AI
+- MIT Technology Review AI
 
-3. **`src/pages/Feed.tsx`** — Default page at `/feed`:
-   - Fetches completed episodes joined with creators, sorted by `published_at` desc
-   - Renders card-based feed: creator name, title, source type badge, date, first 3 executive_summary bullets, build_this_week count badge
-   - Click opens a Drawer/Dialog with full structured_summary sections (Executive Summary, Key Ideas, Mental Models, Actionable Insights, Tools Mentioned, Automation Opportunities, Startup Ideas, Notable Quotes, Build This Week) + source link
+All will be inserted as `source_type: 'rss'` with their respective `rss_feed_url` values and `active: true`.
 
-4. **`src/pages/Build.tsx`** — `/build` page:
-   - Fetches completed episodes from last 14 days with their creators
-   - Extracts and groups `build_this_week` items by creator name, with episode title as subtitle
+### Verification
 
-5. **`src/pages/Tools.tsx`** — `/tools` page:
-   - Fetches completed episodes from last 30 days
-   - Extracts all `tools_mentioned`, counts frequency across episodes
-   - Ranked list by mention count, expandable to show context from each episode
+After insert, run the two verification queries:
+1. Confirm all 19 creators appear (6 existing + 13 new)
+2. Pipeline health check across source types
 
-6. **`src/types/pie.ts`** — TypeScript interfaces for the `structured_summary` JSON shape (key_ideas, mental_models, tools_mentioned, etc.)
+### Note on Query 4 (Reset Failed)
 
-### Files to Modify
-
-- **`src/App.tsx`** — Add routes: `/` redirects to `/feed`, `/feed`, `/build`, `/tools` all wrapped in PieLayout
-- **`src/index.css`** — Dark theme CSS variables, monospace font class
-- **`index.html`** — Add `class="dark"` to `<html>` tag
-
-### Data Fetching Approach
-- Use `@tanstack/react-query` for all queries
-- Supabase client: `supabase.from('pie_episodes').select('*, pie_creators(name)').eq('status', 'completed')`
-- No write operations, no auth required
-- All aggregation (tool frequency, grouping by creator) done client-side since the dataset is small
-
-### Technical Details
-- Dark theme via Tailwind's `dark` class strategy (already configured in tailwind.config.ts)
-- Monospace: `font-mono` Tailwind class for summaries/quotes
-- Episode detail: Sheet component (slide-in from right) for information density
-- Badges: existing Badge component for source type and build count
-- Collapsible sections in episode detail for each summary category
+The failed episode reset (`UPDATE ... SET status = 'pending' WHERE status = 'failed'`) will also be executed. You mentioned only running this after the n8n workflow fix is confirmed — approve the plan and I'll execute all operations.
 
