@@ -174,6 +174,46 @@ const EpisodeDetail = ({ episode, open, onOpenChange }: EpisodeDetailProps) => {
               <BulletList items={s.build_this_week} />
             </Section>
           )}
+
+          {(s.on_the_horizon?.length ?? 0) > 0 && (
+            <Section title="On the Horizon">
+              <div className="space-y-3">
+                {s.on_the_horizon!.map((h, i) => {
+                  const timelineColors: Record<string, string> = {
+                    days: "border-rose-500/40 text-rose-400",
+                    weeks: "border-yellow-500/40 text-yellow-400",
+                    months: "border-emerald-500/40 text-emerald-400",
+                    unknown: "border-muted-foreground/40 text-muted-foreground",
+                  };
+                  return (
+                    <div key={i}>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-semibold text-foreground">{h.feature}</p>
+                        <Badge variant="outline" className={`text-[10px] ${timelineColors[h.timeline] ?? timelineColors.unknown}`}>
+                          {h.timeline}
+                        </Badge>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">{h.source}</p>
+                      <p className="mt-0.5 font-mono-pie text-xs text-muted-foreground">{h.why_it_matters}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </Section>
+          )}
+
+          {(s.industry_shifts?.length ?? 0) > 0 && (
+            <Section title="Industry Shifts">
+              <div className="space-y-3">
+                {s.industry_shifts!.map((item, i) => (
+                  <div key={i}>
+                    <p className="text-xs font-semibold text-foreground">{item.shift}</p>
+                    <p className="mt-0.5 font-mono-pie text-xs text-muted-foreground">{item.evidence}</p>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          )}
         </Accordion>
 
         <div className="mt-6 border-t border-border pt-4">
