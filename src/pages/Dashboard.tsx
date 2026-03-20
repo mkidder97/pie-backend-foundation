@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Clock, Lightbulb, Zap, Wrench } from "lucide-react";
-import { subDays, subHours } from "date-fns";
+import { subDays } from "date-fns";
 
 const now = () => new Date();
 
