@@ -1,10 +1,11 @@
 import { NavLink } from "@/components/NavLink";
-import { LayoutDashboard, Rss, Hammer, Wrench, Search, MessageSquare, Users, Settings } from "lucide-react";
+import { LayoutDashboard, Rss, Hammer, Radar, Wrench, Search, MessageSquare, Users, Settings } from "lucide-react";
 
 const links = [
   { to: "/dashboard", label: "Briefing", icon: LayoutDashboard },
   { to: "/feed", label: "Feed", icon: Rss },
   { to: "/build", label: "Build", icon: Hammer },
+  { to: "/horizon", label: "Horizon", icon: Radar },
   { to: "/tools", label: "Tools", icon: Wrench },
   { to: "/search", label: "Search", icon: Search },
   { to: "/relay", label: "Relay", icon: MessageSquare },
