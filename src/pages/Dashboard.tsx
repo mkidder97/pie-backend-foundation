@@ -183,12 +183,12 @@ const Dashboard = () => {
       )}
 
       {/* Section 2: What Matters Right Now */}
-      {(loading48 || matters.length > 0) && (
+      {(loading14d || matters.length > 0) && (
         <section>
           <h2 className="font-mono-pie text-sm font-bold text-foreground mb-3 tracking-wide">
             What Matters Right Now
           </h2>
-          {loading48 ? (
+          {loading14d ? (
             <div className="space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="h-20 w-full" />
