@@ -1,5 +1,5 @@
 import { NavLink } from "@/components/NavLink";
-import { LayoutDashboard, Rss, Hammer, Wrench, Search, MessageSquare, Users } from "lucide-react";
+import { LayoutDashboard, Rss, Hammer, Wrench, Search, MessageSquare, Users, Settings } from "lucide-react";
 
 const links = [
   { to: "/dashboard", label: "Briefing", icon: LayoutDashboard },
@@ -9,6 +9,7 @@ const links = [
   { to: "/search", label: "Search", icon: Search },
   { to: "/relay", label: "Relay", icon: MessageSquare },
   { to: "/creators", label: "Creators", icon: Users },
+  { to: "/admin", label: "Admin", icon: Settings },
 ];
 
 const PieNav = () => {
