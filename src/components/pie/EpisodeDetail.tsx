@@ -54,6 +54,8 @@ const EpisodeDetail = ({ episode, open, onOpenChange }: EpisodeDetailProps) => {
     startup_app_ideas: [],
     notable_quotes: [],
     build_this_week: [],
+    on_the_horizon: [],
+    industry_shifts: [],
   };
 
   return (
