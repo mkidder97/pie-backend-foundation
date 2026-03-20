@@ -7,6 +7,7 @@ import PieLayout from "@/components/pie/PieLayout";
 import Dashboard from "@/pages/Dashboard";
 import Feed from "@/pages/Feed";
 import Build from "@/pages/Build";
+import Horizon from "@/pages/Horizon";
 import Tools from "@/pages/Tools";
 import SearchPage from "@/pages/SearchPage";
 import Relay from "@/pages/Relay";
