@@ -21,10 +21,10 @@ const App = () => (
         <Routes>
           <Route element={<PieLayout />}>
             <Route path="/" element={<Navigate to="/all" replace />} />
-            <Route path="/:category" element={<CategoryPage />} />
             <Route path="/tools" element={<Tools />} />
             <Route path="/creators" element={<Creators />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/:category" element={<CategoryPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
