@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { PieEpisode, StructuredSummary } from "@/types/pie";
+import type { PieEpisode, StructuredSummary, HorizonItem, IndustryShift } from "@/types/pie";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,10 +16,11 @@ const rangeOptions = [
   { value: "3", label: "Last 3 days" },
   { value: "7", label: "Last 7 days" },
   { value: "14", label: "Last 14 days" },
+  { value: "30", label: "Last 30 days" },
 ];
 
 const Relay = () => {
-  const [days, setDays] = useState("3");
+  const [days, setDays] = useState("7");
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
@@ -43,7 +44,7 @@ const Relay = () => {
 
   // Stats
   const stats = useMemo(() => {
-    let insights = 0, automations = 0, tools = 0;
+    let insights = 0, automations = 0, tools = 0, horizonItems = 0;
     const creators = new Set<string>();
     for (const ep of eps) {
       const s = ep.structured_summary as StructuredSummary | null;
@@ -52,8 +53,9 @@ const Relay = () => {
       insights += s.actionable_insights?.length ?? 0;
       automations += s.automation_opportunities?.length ?? 0;
       tools += s.tools_mentioned?.length ?? 0;
+      horizonItems += s.on_the_horizon?.length ?? 0;
     }
-    return { episodes: eps.length, insights, automations, tools, creators: creators.size };
+    return { episodes: eps.length, insights, automations, tools, creators: creators.size, horizonItems };
   }, [eps]);
 
   // Generate markdown
@@ -103,6 +105,35 @@ const Relay = () => {
       lines.push("## Automation Opportunities");
       lines.push("");
       allAutos.slice(0, 8).forEach((a) => lines.push(`- [${a.complexity}] ${a.idea}`));
+      lines.push("");
+    }
+
+    // On the Horizon
+    const allHorizon: { item: HorizonItem; creator: string }[] = [];
+    for (const ep of eps) {
+      const s = ep.structured_summary as StructuredSummary | null;
+      const creator = ep.pie_creators?.name ?? "Unknown";
+      s?.on_the_horizon?.forEach((h) => allHorizon.push({ item: h, creator }));
+    }
+    if (allHorizon.length > 0) {
+      lines.push("## On the Horizon");
+      lines.push("");
+      allHorizon.forEach(({ item, creator }) =>
+        lines.push(`- [${item.timeline}] ${item.feature} — ${item.why_it_matters} (Source: ${creator})`)
+      );
+      lines.push("");
+    }
+
+    // Industry Shifts
+    const allShifts: IndustryShift[] = [];
+    for (const ep of eps) {
+      const s = ep.structured_summary as StructuredSummary | null;
+      s?.industry_shifts?.forEach((shift) => allShifts.push(shift));
+    }
+    if (allShifts.length > 0) {
+      lines.push("## Industry Shifts");
+      lines.push("");
+      allShifts.forEach((s) => lines.push(`- ${s.shift} — ${s.evidence}`));
       lines.push("");
     }
 
@@ -196,7 +227,7 @@ const Relay = () => {
       {/* Quick stats */}
       {isLoading ? (
         <div className="flex gap-2">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-6 w-24" />
           ))}
         </div>
@@ -206,6 +237,7 @@ const Relay = () => {
           <Badge variant="outline" className="text-[11px]">{stats.insights} insights</Badge>
           <Badge variant="outline" className="text-[11px]">{stats.automations} automations</Badge>
           <Badge variant="outline" className="text-[11px]">{stats.tools} tool mentions</Badge>
+          <Badge variant="outline" className="text-[11px]">{stats.horizonItems} horizon items</Badge>
         </div>
       )}
 
