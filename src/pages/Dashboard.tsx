@@ -9,11 +9,11 @@ import { subDays, subHours } from "date-fns";
 
 const now = () => new Date();
 
-const usePieEpisodes = (hoursAgo: number, queryKey: string) =>
+const usePieEpisodes = (daysAgo: number, queryKey: string) =>
   useQuery({
     queryKey: [queryKey],
     queryFn: async () => {
-      const since = subHours(now(), hoursAgo).toISOString();
+      const since = subDays(now(), daysAgo).toISOString();
       const { data, error } = await supabase
         .from("pie_episodes")
         .select("id, title, source_url, source_type, published_at, status, structured_summary, creator_id, pie_creators(name)")
