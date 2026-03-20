@@ -1,5 +1,6 @@
 import { ExternalLink } from "lucide-react";
 import type { PieEpisode, StructuredSummary } from "@/types/pie";
+import { getSourceBadge } from "@/pages/Feed";
 import {
   Sheet,
   SheetContent,
