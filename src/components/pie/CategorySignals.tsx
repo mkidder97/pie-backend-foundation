@@ -66,7 +66,7 @@ const CategorySignals = ({ category }: Props) => {
     if (!episodes) return { horizonItems, shiftItems };
 
     for (const ep of episodes) {
-      const s = ep.structured_summary as StructuredSummary | null;
+      const s = ep.structured_summary as unknown as StructuredSummary | null;
       const creatorName = (ep.pie_creators as any)?.name ?? "Unknown";
 
       for (const h of s?.on_the_horizon ?? []) {
