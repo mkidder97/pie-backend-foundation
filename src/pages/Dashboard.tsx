@@ -156,13 +156,13 @@ const Dashboard = () => {
   const { data: recent14d, isLoading: loading14d } = usePieEpisodes(14, "pie-dashboard-14d");
   const { data: recent7d, isLoading: loading7d } = usePieEpisodes(7, "pie-dashboard-7d");
 
-  const ep48 = recent48h ?? [];
+  const ep14d = recent14d ?? [];
   const ep7d = recent7d ?? [];
 
-  const matters = extractMatters(ep48);
+  const matters = extractMatters(ep14d, 5);
   const trending = extractTrendingTools(ep7d);
 
-  const isEmpty = !loading48 && !loading7d && ep48.length === 0 && ep7d.length === 0;
+  const isEmpty = !loading14d && !loading7d && ep14d.length === 0 && ep7d.length === 0;
 
   return (
     <div className="space-y-8">
