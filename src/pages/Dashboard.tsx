@@ -153,8 +153,8 @@ function StatCard({ icon: Icon, value, label, loading }: { icon: React.ElementTy
 
 // --- Main ---
 const Dashboard = () => {
-  const { data: recent48h, isLoading: loading48 } = usePieEpisodes(48, "pie-dashboard-48h");
-  const { data: recent7d, isLoading: loading7d } = usePieEpisodes(168, "pie-dashboard-7d");
+  const { data: recent14d, isLoading: loading14d } = usePieEpisodes(14, "pie-dashboard-14d");
+  const { data: recent7d, isLoading: loading7d } = usePieEpisodes(7, "pie-dashboard-7d");
 
   const ep48 = recent48h ?? [];
   const ep7d = recent7d ?? [];
