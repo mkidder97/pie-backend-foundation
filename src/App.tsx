@@ -11,6 +11,7 @@ import Tools from "@/pages/Tools";
 import SearchPage from "@/pages/SearchPage";
 import Relay from "@/pages/Relay";
 import Creators from "@/pages/Creators";
+import Admin from "@/pages/Admin";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
