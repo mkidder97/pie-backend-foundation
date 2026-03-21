@@ -191,6 +191,43 @@ const Relay = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const agentPreamble = `You are my personal AI engineer. I am about to share my weekly intelligence briefing from PIE (Personal Intelligence Engine). After reading it, I want you to:
+
+1. Identify the single highest-leverage thing I should build this week
+2. Ask me 3 clarifying questions to scope it properly
+3. Then present a detailed build plan with file structure, Supabase schema changes needed, and n8n workflow design
+
+My stack: n8n (mkidder97.app.n8n.cloud), Lovable (React/TypeScript/Tailwind/shadcn), Supabase (PostgreSQL + pgvector + Edge Functions), Claude API (claude-haiku-4-5-20251001)
+
+---
+
+`;
+
+  const handleAgentBrief = async () => {
+    const combined = agentPreamble + markdown;
+    await navigator.clipboard.writeText(combined);
+    setAgentCopied(true);
+    toast({ title: "Agent Brief copied!", description: "Paste into Claude Code to start building." });
+    setTimeout(() => setAgentCopied(false), 5000);
+  };
+
+  const handleAgentSave = async () => {
+    const combined = agentPreamble + markdown;
+    const rangeLabel = rangeOptions.find((r) => r.value === days)?.label ?? "";
+    const { error } = await supabase.from("pie_agent_briefs" as any).insert({
+      title: `Weekly Agent Brief — ${rangeLabel}`,
+      prompt: combined,
+      category: "relay",
+      source: "relay",
+    });
+    if (error) {
+      toast({ title: "Error saving", variant: "destructive" });
+      return;
+    }
+    setAgentSaved(true);
+    toast({ title: "Saved to Agent Briefs library" });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
