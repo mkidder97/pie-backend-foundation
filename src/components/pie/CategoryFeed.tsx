@@ -22,6 +22,7 @@ const CategoryFeed = ({ category }: Props) => {
   const [selected, setSelected] = useState<PieEpisode | null>(null);
   const [filter, setFilter] = useState<SourceFilter>("all");
   const [expandedBuilds, setExpandedBuilds] = useState<Set<string>>(new Set());
+  const [launchBuild, setLaunchBuild] = useState<{ idea: string; episodeTitle: string; creatorName: string } | null>(null);
 
   const { data: episodes, isLoading } = useQuery({
     queryKey: ["pie-category-feed", category],
