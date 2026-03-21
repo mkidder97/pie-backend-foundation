@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Play } from "lucide-react";
 import EpisodeDetail from "@/components/pie/EpisodeDetail";
+import AgentLaunchDialog from "@/components/pie/AgentLaunchDialog";
 import { getSourceBadge } from "@/pages/Feed";
 
 type SourceFilter = "all" | "youtube" | "rss";
