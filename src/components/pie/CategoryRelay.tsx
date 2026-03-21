@@ -26,6 +26,8 @@ interface Props {
 const CategoryRelay = ({ category }: Props) => {
   const [days, setDays] = useState("7");
   const [copied, setCopied] = useState(false);
+  const [agentCopied, setAgentCopied] = useState(false);
+  const [agentSaved, setAgentSaved] = useState(false);
   const { toast } = useToast();
 
   const since = useMemo(() => subDays(new Date(), Number(days)).toISOString(), [days]);
