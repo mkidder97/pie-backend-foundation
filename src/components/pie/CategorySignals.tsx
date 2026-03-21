@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { Eye, Check } from "lucide-react";
 import { Eye, Check } from "lucide-react";
 
 const TIMELINE_ORDER: Record<string, number> = { days: 0, weeks: 1, months: 2, unknown: 3 };
