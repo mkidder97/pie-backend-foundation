@@ -52,12 +52,12 @@ const PieNav = () => {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4">
-        <div className="flex items-center gap-8">
-          <span className="font-mono-pie text-sm font-bold tracking-widest text-primary">
+      <div className="mx-auto flex h-12 max-w-6xl items-center justify-between gap-2 px-3 sm:px-4">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-8">
+          <span className="font-mono-pie text-sm font-bold tracking-widest text-primary shrink-0">
             PIE
           </span>
-          <div className="flex gap-1 overflow-x-auto">
+          <div className="flex gap-0.5 sm:gap-1 overflow-x-auto scrollbar-hide -mx-1 px-1">
             {categories.map((cat) => {
               const count = getCount(cat);
               return (
@@ -66,7 +66,7 @@ const PieNav = () => {
                   to={cat.to}
                   className={({ isActive }) =>
                     cn(
-                      "rounded px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1.5",
+                      "rounded px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1 sm:gap-1.5",
                       isActive
                         ? "bg-accent text-foreground"
                         : "text-muted-foreground hover:text-foreground"
@@ -87,7 +87,7 @@ const PieNav = () => {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+            <button className="shrink-0 rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
               <Settings className="h-4 w-4" />
             </button>
           </DropdownMenuTrigger>
