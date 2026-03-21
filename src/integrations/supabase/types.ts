@@ -183,6 +183,36 @@ export type Database = {
           },
         ]
       }
+      pie_user_preferences: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          preference_key: string
+          preference_type: string
+          updated_at: string | null
+          weight: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          preference_key: string
+          preference_type: string
+          updated_at?: string | null
+          weight?: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          preference_key?: string
+          preference_type?: string
+          updated_at?: string | null
+          weight?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
