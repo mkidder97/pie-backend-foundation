@@ -51,8 +51,12 @@ const CategoryFeed = ({ category }: Props) => {
       const summary = s.executive_summary;
       if (!summary?.length) return false;
       const first = summary[0]?.toLowerCase() ?? "";
-      if (first.includes("no transcript")) return false;
-      if (first.includes("unable to extract")) return false;
+      const badPhrases = [
+        "no transcript", "unable to extract", "no relevance",
+        "transcript contains only metadata", "transcript is nearly empty",
+        "cannot extract", "no substantive content",
+      ];
+      if (badPhrases.some((phrase) => first.includes(phrase))) return false;
       return true;
     })
     .filter((ep) => {

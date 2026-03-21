@@ -1,0 +1,1 @@
+UPDATE pie_creators SET active = false WHERE name = 'Product Hunt Daily';
