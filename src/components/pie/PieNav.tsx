@@ -99,6 +99,12 @@ const PieNav = () => {
               </NavLink>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
+              <NavLink to="/saved" className="flex items-center gap-2 cursor-pointer">
+                <Bookmark className="h-3.5 w-3.5" />
+                Agent Briefs
+              </NavLink>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
               <NavLink to="/admin" className="flex items-center gap-2 cursor-pointer">
                 <BarChart3 className="h-3.5 w-3.5" />
                 Admin

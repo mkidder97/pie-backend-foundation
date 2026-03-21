@@ -176,19 +176,34 @@ ${sourcesText}`;
           <div className="space-y-2">
             {horizonGroups.map((item, i) => (
               <div key={i} className="rounded-lg border border-border bg-card p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-semibold text-foreground">{item.feature}</span>
-                  <Badge
-                    variant="outline"
-                    className={`text-[10px] ${TIMELINE_STYLE[item.timeline] ?? TIMELINE_STYLE.unknown}`}
-                  >
-                    {item.timeline}
-                  </Badge>
-                  {item.sources.length > 1 && (
-                    <Badge variant="secondary" className="text-[10px]">
-                      {item.sources.length} sources
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-semibold text-foreground">{item.feature}</span>
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] ${TIMELINE_STYLE[item.timeline] ?? TIMELINE_STYLE.unknown}`}
+                    >
+                      {item.timeline}
                     </Badge>
-                  )}
+                    {item.sources.length > 1 && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        {item.sources.length} sources
+                      </Badge>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-6 gap-1 px-2 text-[10px] shrink-0"
+                    onClick={() => handleMonitor(item)}
+                    disabled={savedMonitors.has(item.feature)}
+                  >
+                    {savedMonitors.has(item.feature) ? (
+                      <><Check className="h-3 w-3" /> Saved</>
+                    ) : (
+                      <><Eye className="h-3 w-3" /> Monitor</>
+                    )}
+                  </Button>
                 </div>
                 <p className="font-mono-pie text-xs leading-relaxed text-muted-foreground">
                   {item.why_it_matters}

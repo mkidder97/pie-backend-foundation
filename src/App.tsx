@@ -24,6 +24,7 @@ const App = () => (
             <Route path="/" element={<Navigate to="/all" replace />} />
             <Route path="/tools" element={<Tools />} />
             <Route path="/creators" element={<Creators />} />
+            <Route path="/saved" element={<SavedBriefs />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/:category" element={<CategoryPage />} />
           </Route>

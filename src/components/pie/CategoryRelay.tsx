@@ -275,6 +275,22 @@ My stack: n8n (mkidder97.app.n8n.cloud), Lovable (React/TypeScript/Tailwind/shad
           {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
           {copied ? "Copied!" : "Copy Briefing → Paste into Claude"}
         </Button>
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={handleAgentBrief}
+          disabled={!markdown || isLoading}
+          className="gap-2 text-sm sm:w-auto"
+        >
+          <Bot className="h-4 w-4" />
+          {agentCopied ? "Copied!" : "Agent Brief"}
+        </Button>
+        {agentCopied && !agentSaved && (
+          <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={handleAgentSave}>
+            <Save className="h-3 w-3" />
+            Save
+          </Button>
+        )}
         <p className="text-[11px] text-muted-foreground leading-relaxed max-w-md">
           Copy this briefing and start a new Claude conversation to get personalized analysis and next actions.
         </p>

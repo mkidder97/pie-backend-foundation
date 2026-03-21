@@ -219,6 +219,12 @@ const CategoryFeed = ({ category }: Props) => {
         open={!!selected}
         onOpenChange={(open) => !open && setSelected(null)}
       />
+
+      <AgentLaunchDialog
+        build={launchBuild}
+        open={!!launchBuild}
+        onOpenChange={(open) => !open && setLaunchBuild(null)}
+      />
     </>
   );
 };

@@ -261,6 +261,23 @@ My stack: n8n (mkidder97.app.n8n.cloud), Lovable (React/TypeScript/Tailwind/shad
           {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
           {copied ? "Copied" : "Copy All"}
         </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleAgentBrief}
+          disabled={!markdown || isLoading}
+          className="gap-1.5"
+        >
+          <Bot className="h-3.5 w-3.5" />
+          {agentCopied ? "Copied!" : "Agent Brief"}
+        </Button>
+        {agentCopied && !agentSaved && (
+          <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={handleAgentSave}>
+            <Save className="h-3 w-3" />
+            Save
+          </Button>
+        )}
       </div>
 
       {/* Quick stats */}
