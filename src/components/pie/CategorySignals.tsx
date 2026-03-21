@@ -42,6 +42,8 @@ interface Props {
 
 const CategorySignals = ({ category }: Props) => {
   const [days, setDays] = useState(30);
+  const [savedMonitors, setSavedMonitors] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
 
   const since = useMemo(() => subDays(new Date(), days).toISOString(), [days]);
 
