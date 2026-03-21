@@ -183,9 +183,25 @@ const CategoryFeed = ({ category }: Props) => {
                     {isExpanded && (
                       <ul className="mt-1.5 space-y-1 ml-4">
                         {builds.map((b, i) => (
-                          <li key={i} className="font-mono-pie text-[11px] leading-relaxed text-muted-foreground">
-                            <span className="mr-1.5 text-primary">⚡</span>
-                            {b}
+                          <li key={i} className="flex items-center justify-between gap-2 font-mono-pie text-[11px] leading-relaxed text-muted-foreground">
+                            <span>
+                              <span className="mr-1.5 text-primary">⚡</span>
+                              {b}
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setLaunchBuild({
+                                  idea: b,
+                                  episodeTitle: ep.title,
+                                  creatorName: ep.pie_creators?.name ?? "Unknown",
+                                });
+                              }}
+                              className="shrink-0 flex items-center gap-0.5 text-[10px] font-medium text-primary hover:text-primary/80 transition-colors"
+                            >
+                              <Play className="h-2.5 w-2.5" />
+                              Launch
+                            </button>
                           </li>
                         ))}
                       </ul>
