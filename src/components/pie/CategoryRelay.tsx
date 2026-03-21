@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Bot, Save } from "lucide-react";
 import { subDays, format } from "date-fns";
 
 const rangeOptions = [
