@@ -42,10 +42,21 @@ const CategoryFeed = ({ category }: Props) => {
     },
   });
 
-  const filtered = episodes?.filter((ep) => {
-    if (filter === "all") return true;
-    return ep.source_type === filter;
-  });
+  const filtered = episodes
+    ?.filter((ep) => {
+      const s = ep.structured_summary as StructuredSummary | null;
+      if (!s) return false;
+      const summary = s.executive_summary;
+      if (!summary?.length) return false;
+      const first = summary[0]?.toLowerCase() ?? "";
+      if (first.includes("no transcript")) return false;
+      if (first.includes("unable to extract")) return false;
+      return true;
+    })
+    .filter((ep) => {
+      if (filter === "all") return true;
+      return ep.source_type === filter;
+    });
 
   const toggleBuilds = (id: string) => {
     setExpandedBuilds((prev) => {

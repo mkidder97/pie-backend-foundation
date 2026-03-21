@@ -1,5 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { Settings, Users, BarChart3 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,16 +11,44 @@ import {
 import { cn } from "@/lib/utils";
 
 const categories = [
-  { to: "/all", label: "All" },
-  { to: "/src-tools", label: "SRC Tools" },
-  { to: "/stack-watch", label: "Stack Watch" },
-  { to: "/finance", label: "Finance" },
-  { to: "/opportunities", label: "Opportunities" },
-  { to: "/tools", label: "Tools" },
+  { to: "/all", label: "All", dbCategory: null },
+  { to: "/src-tools", label: "SRC Tools", dbCategory: "src_tools" },
+  { to: "/stack-watch", label: "Stack Watch", dbCategory: "stack_watch" },
+  { to: "/finance", label: "Finance", dbCategory: "finance" },
+  { to: "/opportunities", label: "Opportunities", dbCategory: "opportunities" },
+  { to: "/tools", label: "Tools", dbCategory: null },
 ];
 
 const PieNav = () => {
   const location = useLocation();
+
+  const { data: counts } = useQuery({
+    queryKey: ["pie-nav-counts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pie_episodes")
+        .select("pie_creators!inner(category)")
+        .eq("status", "completed");
+
+      if (error) throw error;
+
+      const map: Record<string, number> = {};
+      for (const row of data ?? []) {
+        const cat = (row.pie_creators as any)?.category as string;
+        if (cat) map[cat] = (map[cat] ?? 0) + 1;
+      }
+      return map;
+    },
+    staleTime: 60_000,
+  });
+
+  const totalCount = counts ? Object.values(counts).reduce((a, b) => a + b, 0) : 0;
+
+  const getCount = (cat: typeof categories[number]) => {
+    if (cat.to === "/all") return totalCount;
+    if (cat.to === "/tools" || !cat.dbCategory) return 0;
+    return counts?.[cat.dbCategory] ?? 0;
+  };
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -28,22 +58,30 @@ const PieNav = () => {
             PIE
           </span>
           <div className="flex gap-1 overflow-x-auto">
-            {categories.map((cat) => (
-              <NavLink
-                key={cat.to}
-                to={cat.to}
-                className={({ isActive }) =>
-                  cn(
-                    "rounded px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap",
-                    isActive
-                      ? "bg-accent text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  )
-                }
-              >
-                {cat.label}
-              </NavLink>
-            ))}
+            {categories.map((cat) => {
+              const count = getCount(cat);
+              return (
+                <NavLink
+                  key={cat.to}
+                  to={cat.to}
+                  className={({ isActive }) =>
+                    cn(
+                      "rounded px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1.5",
+                      isActive
+                        ? "bg-accent text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    )
+                  }
+                >
+                  {cat.label}
+                  {count > 0 && (
+                    <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-muted px-1 text-[10px] font-semibold text-muted-foreground">
+                      {count}
+                    </span>
+                  )}
+                </NavLink>
+              );
+            })}
           </div>
         </div>
 
