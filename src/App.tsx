@@ -8,6 +8,7 @@ import CategoryPage from "@/pages/CategoryPage";
 import Tools from "@/pages/Tools";
 import Creators from "@/pages/Creators";
 import Admin from "@/pages/Admin";
+import SavedBriefs from "@/pages/SavedBriefs";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
