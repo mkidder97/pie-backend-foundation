@@ -39,7 +39,7 @@ const CategorySignals = ({ category }: Props) => {
     queryFn: async () => {
       let query = supabase
         .from("pie_episodes")
-        .select("title, published_at, structured_summary, pie_creators(name, category)")
+        .select("title, published_at, structured_summary, pie_creators!inner(name, category)")
         .eq("status", "completed")
         .gte("published_at", thirtyDaysAgo)
         .order("published_at", { ascending: false });
@@ -51,11 +51,7 @@ const CategorySignals = ({ category }: Props) => {
       const { data, error } = await query;
       if (error) throw error;
 
-      let results = data;
-      if (category) {
-        results = results.filter((ep: any) => ep.pie_creators !== null);
-      }
-      return results;
+      return data;
     },
   });
 

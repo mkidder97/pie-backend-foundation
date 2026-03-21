@@ -35,7 +35,7 @@ const CategoryRelay = ({ category }: Props) => {
     queryFn: async () => {
       let query = supabase
         .from("pie_episodes")
-        .select("id, title, source_url, source_type, published_at, status, structured_summary, creator_id, pie_creators(name, category)")
+        .select("id, title, source_url, source_type, published_at, status, structured_summary, creator_id, pie_creators!inner(name, category)")
         .eq("status", "completed")
         .gte("published_at", since)
         .order("published_at", { ascending: false });
@@ -47,11 +47,7 @@ const CategoryRelay = ({ category }: Props) => {
       const { data, error } = await query;
       if (error) throw error;
 
-      let results = data as unknown as PieEpisode[];
-      if (category) {
-        results = results.filter((ep) => ep.pie_creators !== null);
-      }
-      return results;
+      return data as unknown as PieEpisode[];
     },
   });
 
