@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Play } from "lucide-react";
 import EpisodeDetail from "@/components/pie/EpisodeDetail";
+import AgentLaunchDialog from "@/components/pie/AgentLaunchDialog";
 import { getSourceBadge } from "@/pages/Feed";
 
 type SourceFilter = "all" | "youtube" | "rss";
@@ -21,6 +22,7 @@ const CategoryFeed = ({ category }: Props) => {
   const [selected, setSelected] = useState<PieEpisode | null>(null);
   const [filter, setFilter] = useState<SourceFilter>("all");
   const [expandedBuilds, setExpandedBuilds] = useState<Set<string>>(new Set());
+  const [launchBuild, setLaunchBuild] = useState<{ idea: string; episodeTitle: string; creatorName: string } | null>(null);
 
   const { data: episodes, isLoading } = useQuery({
     queryKey: ["pie-category-feed", category],
@@ -181,9 +183,25 @@ const CategoryFeed = ({ category }: Props) => {
                     {isExpanded && (
                       <ul className="mt-1.5 space-y-1 ml-4">
                         {builds.map((b, i) => (
-                          <li key={i} className="font-mono-pie text-[11px] leading-relaxed text-muted-foreground">
-                            <span className="mr-1.5 text-primary">⚡</span>
-                            {b}
+                          <li key={i} className="flex items-center justify-between gap-2 font-mono-pie text-[11px] leading-relaxed text-muted-foreground">
+                            <span>
+                              <span className="mr-1.5 text-primary">⚡</span>
+                              {b}
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setLaunchBuild({
+                                  idea: b,
+                                  episodeTitle: ep.title,
+                                  creatorName: ep.pie_creators?.name ?? "Unknown",
+                                });
+                              }}
+                              className="shrink-0 flex items-center gap-0.5 text-[10px] font-medium text-primary hover:text-primary/80 transition-colors"
+                            >
+                              <Play className="h-2.5 w-2.5" />
+                              Launch
+                            </button>
                           </li>
                         ))}
                       </ul>
@@ -200,6 +218,12 @@ const CategoryFeed = ({ category }: Props) => {
         episode={selected}
         open={!!selected}
         onOpenChange={(open) => !open && setSelected(null)}
+      />
+
+      <AgentLaunchDialog
+        build={launchBuild}
+        open={!!launchBuild}
+        onOpenChange={(open) => !open && setLaunchBuild(null)}
       />
     </>
   );

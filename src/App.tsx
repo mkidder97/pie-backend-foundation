@@ -8,6 +8,7 @@ import CategoryPage from "@/pages/CategoryPage";
 import Tools from "@/pages/Tools";
 import Creators from "@/pages/Creators";
 import Admin from "@/pages/Admin";
+import SavedBriefs from "@/pages/SavedBriefs";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
             <Route path="/" element={<Navigate to="/all" replace />} />
             <Route path="/tools" element={<Tools />} />
             <Route path="/creators" element={<Creators />} />
+            <Route path="/saved" element={<SavedBriefs />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/:category" element={<CategoryPage />} />
           </Route>

@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Settings, Users, BarChart3 } from "lucide-react";
+import { Settings, Users, BarChart3, Bookmark } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -96,6 +96,12 @@ const PieNav = () => {
               <NavLink to="/creators" className="flex items-center gap-2 cursor-pointer">
                 <Users className="h-3.5 w-3.5" />
                 Creators
+              </NavLink>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <NavLink to="/saved" className="flex items-center gap-2 cursor-pointer">
+                <Bookmark className="h-3.5 w-3.5" />
+                Agent Briefs
               </NavLink>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>

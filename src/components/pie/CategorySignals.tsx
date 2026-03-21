@@ -6,6 +6,8 @@ import type { HorizonItem, StructuredSummary } from "@/types/pie";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+import { Eye, Check } from "lucide-react";
 
 const TIMELINE_ORDER: Record<string, number> = { days: 0, weeks: 1, months: 2, unknown: 3 };
 const TIMELINE_STYLE: Record<string, string> = {
@@ -39,6 +41,8 @@ interface Props {
 
 const CategorySignals = ({ category }: Props) => {
   const [days, setDays] = useState(30);
+  const [savedMonitors, setSavedMonitors] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
 
   const since = useMemo(() => subDays(new Date(), days).toISOString(), [days]);
 
@@ -100,6 +104,41 @@ const CategorySignals = ({ category }: Props) => {
     return { horizonGroups, shiftItems };
   }, [episodes]);
 
+  const handleMonitor = async (item: HorizonGroup) => {
+    const sourcesText = item.sources.map((s) => `- ${s.creatorName} — ${s.episodeTitle}`).join("\n");
+    const prompt = `Monitor and report on: ${item.feature}
+
+Context: ${item.why_it_matters}
+
+When this ships or gets closer to release, I want to know:
+1. What exactly changed
+2. How it affects my stack (n8n, Lovable, Supabase, Claude API)
+3. What I should do within 48 hours of it shipping
+
+Sources:
+${sourcesText}`;
+
+    const { error } = await supabase.from("pie_agent_briefs" as any).insert({
+      title: `Monitor: ${item.feature}`,
+      prompt,
+      category: "monitor",
+      source: `${item.sources[0]?.creatorName} — ${item.sources[0]?.episodeTitle}`,
+    });
+    if (error) {
+      toast({ title: "Error saving", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Added to monitoring queue" });
+    setSavedMonitors((prev) => new Set(prev).add(item.feature));
+    setTimeout(() => {
+      setSavedMonitors((prev) => {
+        const next = new Set(prev);
+        next.delete(item.feature);
+        return next;
+      });
+    }, 2000);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -136,19 +175,34 @@ const CategorySignals = ({ category }: Props) => {
           <div className="space-y-2">
             {horizonGroups.map((item, i) => (
               <div key={i} className="rounded-lg border border-border bg-card p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-semibold text-foreground">{item.feature}</span>
-                  <Badge
-                    variant="outline"
-                    className={`text-[10px] ${TIMELINE_STYLE[item.timeline] ?? TIMELINE_STYLE.unknown}`}
-                  >
-                    {item.timeline}
-                  </Badge>
-                  {item.sources.length > 1 && (
-                    <Badge variant="secondary" className="text-[10px]">
-                      {item.sources.length} sources
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-semibold text-foreground">{item.feature}</span>
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] ${TIMELINE_STYLE[item.timeline] ?? TIMELINE_STYLE.unknown}`}
+                    >
+                      {item.timeline}
                     </Badge>
-                  )}
+                    {item.sources.length > 1 && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        {item.sources.length} sources
+                      </Badge>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-6 gap-1 px-2 text-[10px] shrink-0"
+                    onClick={() => handleMonitor(item)}
+                    disabled={savedMonitors.has(item.feature)}
+                  >
+                    {savedMonitors.has(item.feature) ? (
+                      <><Check className="h-3 w-3" /> Saved</>
+                    ) : (
+                      <><Eye className="h-3 w-3" /> Monitor</>
+                    )}
+                  </Button>
                 </div>
                 <p className="font-mono-pie text-xs leading-relaxed text-muted-foreground">
                   {item.why_it_matters}

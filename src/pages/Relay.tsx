@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Bot, Save } from "lucide-react";
 import { subDays, format } from "date-fns";
 
 const rangeOptions = [
@@ -22,6 +22,8 @@ const rangeOptions = [
 const Relay = () => {
   const [days, setDays] = useState("7");
   const [copied, setCopied] = useState(false);
+  const [agentCopied, setAgentCopied] = useState(false);
+  const [agentSaved, setAgentSaved] = useState(false);
   const { toast } = useToast();
 
   const since = useMemo(() => subDays(new Date(), Number(days)).toISOString(), [days]);
@@ -189,6 +191,43 @@ const Relay = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const agentPreamble = `You are my personal AI engineer. I am about to share my weekly intelligence briefing from PIE (Personal Intelligence Engine). After reading it, I want you to:
+
+1. Identify the single highest-leverage thing I should build this week
+2. Ask me 3 clarifying questions to scope it properly
+3. Then present a detailed build plan with file structure, Supabase schema changes needed, and n8n workflow design
+
+My stack: n8n (mkidder97.app.n8n.cloud), Lovable (React/TypeScript/Tailwind/shadcn), Supabase (PostgreSQL + pgvector + Edge Functions), Claude API (claude-haiku-4-5-20251001)
+
+---
+
+`;
+
+  const handleAgentBrief = async () => {
+    const combined = agentPreamble + markdown;
+    await navigator.clipboard.writeText(combined);
+    setAgentCopied(true);
+    toast({ title: "Agent Brief copied!", description: "Paste into Claude Code to start building." });
+    setTimeout(() => setAgentCopied(false), 5000);
+  };
+
+  const handleAgentSave = async () => {
+    const combined = agentPreamble + markdown;
+    const rangeLabel = rangeOptions.find((r) => r.value === days)?.label ?? "";
+    const { error } = await supabase.from("pie_agent_briefs" as any).insert({
+      title: `Weekly Agent Brief — ${rangeLabel}`,
+      prompt: combined,
+      category: "relay",
+      source: "relay",
+    });
+    if (error) {
+      toast({ title: "Error saving", variant: "destructive" });
+      return;
+    }
+    setAgentSaved(true);
+    toast({ title: "Saved to Agent Briefs library" });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -222,6 +261,23 @@ const Relay = () => {
           {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
           {copied ? "Copied" : "Copy All"}
         </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleAgentBrief}
+          disabled={!markdown || isLoading}
+          className="gap-1.5"
+        >
+          <Bot className="h-3.5 w-3.5" />
+          {agentCopied ? "Copied!" : "Agent Brief"}
+        </Button>
+        {agentCopied && !agentSaved && (
+          <Button variant="ghost" size="sm" className="gap-1 text-xs" onClick={handleAgentSave}>
+            <Save className="h-3 w-3" />
+            Save
+          </Button>
+        )}
       </div>
 
       {/* Quick stats */}
