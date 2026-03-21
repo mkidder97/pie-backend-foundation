@@ -27,7 +27,7 @@ const CategoryFeed = ({ category }: Props) => {
     queryFn: async () => {
       let query = supabase
         .from("pie_episodes")
-        .select("id, title, source_url, source_type, published_at, status, structured_summary, creator_id, pie_creators(name, category)")
+        .select("id, title, source_url, source_type, published_at, status, structured_summary, creator_id, pie_creators!inner(name, category)")
         .eq("status", "completed")
         .order("published_at", { ascending: false });
 
@@ -38,12 +38,7 @@ const CategoryFeed = ({ category }: Props) => {
       const { data, error } = await query;
       if (error) throw error;
 
-      // When filtering by category via join, episodes without matching creator come back with pie_creators = null
-      let results = data as unknown as (PieEpisode & { pie_creators: { name: string; category: string } | null })[];
-      if (category) {
-        results = results.filter((ep) => ep.pie_creators !== null);
-      }
-      return results as unknown as PieEpisode[];
+      return data as unknown as PieEpisode[];
     },
   });
 
