@@ -105,6 +105,41 @@ const CategorySignals = ({ category }: Props) => {
     return { horizonGroups, shiftItems };
   }, [episodes]);
 
+  const handleMonitor = async (item: HorizonGroup) => {
+    const sourcesText = item.sources.map((s) => `- ${s.creatorName} — ${s.episodeTitle}`).join("\n");
+    const prompt = `Monitor and report on: ${item.feature}
+
+Context: ${item.why_it_matters}
+
+When this ships or gets closer to release, I want to know:
+1. What exactly changed
+2. How it affects my stack (n8n, Lovable, Supabase, Claude API)
+3. What I should do within 48 hours of it shipping
+
+Sources:
+${sourcesText}`;
+
+    const { error } = await supabase.from("pie_agent_briefs" as any).insert({
+      title: `Monitor: ${item.feature}`,
+      prompt,
+      category: "monitor",
+      source: `${item.sources[0]?.creatorName} — ${item.sources[0]?.episodeTitle}`,
+    });
+    if (error) {
+      toast({ title: "Error saving", variant: "destructive" });
+      return;
+    }
+    toast({ title: "Added to monitoring queue" });
+    setSavedMonitors((prev) => new Set(prev).add(item.feature));
+    setTimeout(() => {
+      setSavedMonitors((prev) => {
+        const next = new Set(prev);
+        next.delete(item.feature);
+        return next;
+      });
+    }, 2000);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
