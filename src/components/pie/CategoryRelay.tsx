@@ -102,6 +102,32 @@ const CategoryRelay = ({ category }: Props) => {
       lines.push("");
     }
 
+    // Startup & App Ideas
+    const allStartups: { concept: string; why_interesting: string }[] = [];
+    for (const ep of eps) {
+      const s = ep.structured_summary as StructuredSummary | null;
+      s?.startup_app_ideas?.forEach((idea) => allStartups.push(idea));
+    }
+    if (allStartups.length > 0) {
+      lines.push("## Startup & App Ideas");
+      lines.push("");
+      allStartups.slice(0, 8).forEach((a) => lines.push(`- ${a.concept} — ${a.why_interesting}`));
+      lines.push("");
+    }
+
+    // Notable Quotes
+    const allQuotes: string[] = [];
+    for (const ep of eps) {
+      const s = ep.structured_summary as StructuredSummary | null;
+      s?.notable_quotes?.forEach((q) => allQuotes.push(q));
+    }
+    if (allQuotes.length > 0) {
+      lines.push("## Notable Quotes");
+      lines.push("");
+      allQuotes.slice(0, 5).forEach((q) => lines.push(`> ${q}`));
+      lines.push("");
+    }
+
     const allAutos: { idea: string; complexity: string }[] = [];
     for (const ep of eps) {
       const s = ep.structured_summary as StructuredSummary | null;
@@ -199,6 +225,22 @@ const CategoryRelay = ({ category }: Props) => {
         </p>
       </div>
 
+      {/* Hero CTA */}
+      <div className="space-y-2">
+        <Button
+          size="lg"
+          onClick={handleCopy}
+          disabled={!markdown || isLoading}
+          className="w-full gap-2 bg-emerald-600 text-white hover:bg-emerald-700 font-semibold text-sm sm:w-auto"
+        >
+          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          {copied ? "Copied!" : "Copy Briefing → Paste into Claude"}
+        </Button>
+        <p className="text-[11px] text-muted-foreground leading-relaxed max-w-md">
+          Copy this briefing and start a new Claude conversation to get personalized analysis and next actions.
+        </p>
+      </div>
+
       <div className="flex flex-wrap items-center gap-3">
         <Select value={days} onValueChange={setDays}>
           <SelectTrigger className="w-44 bg-card border-border text-sm">
@@ -210,17 +252,6 @@ const CategoryRelay = ({ category }: Props) => {
             ))}
           </SelectContent>
         </Select>
-
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleCopy}
-          disabled={!markdown || isLoading}
-          className="gap-1.5"
-        >
-          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-          {copied ? "Copied" : "Copy All"}
-        </Button>
       </div>
 
       {isLoading ? (
