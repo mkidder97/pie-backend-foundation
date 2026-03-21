@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      pie_agent_briefs: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          id: string
+          prompt: string
+          source: string | null
+          title: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          prompt: string
+          source?: string | null
+          title: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          prompt?: string
+          source?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       pie_chunks: {
         Row: {
           chunk_index: number
