@@ -183,6 +183,83 @@ export type Database = {
           },
         ]
       }
+      pie_tool_recon: {
+        Row: {
+          autonomy_multiplier_reason: string | null
+          autonomy_multiplier_score: number | null
+          builder_evolution_reason: string | null
+          builder_evolution_score: number | null
+          created_at: string | null
+          emerging_stack_reason: string | null
+          emerging_stack_score: number | null
+          flagged_by_pie: boolean | null
+          id: string
+          integrations: string[] | null
+          manually_added: boolean | null
+          recon_summary: string | null
+          replaces_or_upgrades: string | null
+          solo_viable: boolean | null
+          source_episode_id: string | null
+          tool_name: string
+          total_score: number | null
+          use_cases: string[] | null
+          verdict: string | null
+          website_url: string | null
+        }
+        Insert: {
+          autonomy_multiplier_reason?: string | null
+          autonomy_multiplier_score?: number | null
+          builder_evolution_reason?: string | null
+          builder_evolution_score?: number | null
+          created_at?: string | null
+          emerging_stack_reason?: string | null
+          emerging_stack_score?: number | null
+          flagged_by_pie?: boolean | null
+          id?: string
+          integrations?: string[] | null
+          manually_added?: boolean | null
+          recon_summary?: string | null
+          replaces_or_upgrades?: string | null
+          solo_viable?: boolean | null
+          source_episode_id?: string | null
+          tool_name: string
+          total_score?: number | null
+          use_cases?: string[] | null
+          verdict?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          autonomy_multiplier_reason?: string | null
+          autonomy_multiplier_score?: number | null
+          builder_evolution_reason?: string | null
+          builder_evolution_score?: number | null
+          created_at?: string | null
+          emerging_stack_reason?: string | null
+          emerging_stack_score?: number | null
+          flagged_by_pie?: boolean | null
+          id?: string
+          integrations?: string[] | null
+          manually_added?: boolean | null
+          recon_summary?: string | null
+          replaces_or_upgrades?: string | null
+          solo_viable?: boolean | null
+          source_episode_id?: string | null
+          tool_name?: string
+          total_score?: number | null
+          use_cases?: string[] | null
+          verdict?: string | null
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pie_tool_recon_source_episode_id_fkey"
+            columns: ["source_episode_id"]
+            isOneToOne: false
+            referencedRelation: "pie_episodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pie_user_preferences: {
         Row: {
           created_at: string | null
