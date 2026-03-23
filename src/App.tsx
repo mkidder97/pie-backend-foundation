@@ -10,7 +10,7 @@ import Creators from "@/pages/Creators";
 import Admin from "@/pages/Admin";
 import SavedBriefs from "@/pages/SavedBriefs";
 import Preferences from "@/pages/Preferences";
-import SavedBriefs from "@/pages/SavedBriefs";
+import NotFound from "@/pages/NotFound";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
