@@ -11,7 +11,6 @@ import Admin from "@/pages/Admin";
 import SavedBriefs from "@/pages/SavedBriefs";
 import Preferences from "@/pages/Preferences";
 import NotFound from "@/pages/NotFound";
-import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
