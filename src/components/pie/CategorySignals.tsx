@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { subDays } from "date-fns";
-import type { HorizonItem, StructuredSummary } from "@/types/pie";
+import type { HorizonItem, StructuredSummary, BuilderEvolutionItem } from "@/types/pie";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,9 +24,10 @@ interface HorizonGroup {
   sources: { creatorName: string; episodeTitle: string }[];
 }
 
-interface ShiftEntry {
-  shift: string;
-  evidence: string;
+interface BuilderEvoEntry {
+  item: BuilderEvolutionItem;
+  creatorName: string;
+  episodeTitle: string;
 }
 
 const dayOptions = [
@@ -37,6 +38,12 @@ const dayOptions = [
 
 interface Props {
   category: string | null;
+}
+
+function scoreColor(score: number): string {
+  if (score >= 8) return "bg-emerald-500/20 text-emerald-400 border-emerald-500/40";
+  if (score >= 5) return "bg-yellow-500/20 text-yellow-400 border-yellow-500/40";
+  return "bg-muted text-muted-foreground border-border";
 }
 
 const CategorySignals = ({ category }: Props) => {
@@ -62,16 +69,15 @@ const CategorySignals = ({ category }: Props) => {
 
       const { data, error } = await query;
       if (error) throw error;
-
       return data;
     },
   });
 
-  const { horizonGroups, shiftItems } = useMemo(() => {
+  const { horizonGroups, builderEvoItems } = useMemo(() => {
     const horizonMap = new Map<string, HorizonGroup>();
-    const shiftItems: ShiftEntry[] = [];
+    const builderEvoItems: BuilderEvoEntry[] = [];
 
-    if (!episodes) return { horizonGroups: [], shiftItems };
+    if (!episodes) return { horizonGroups: [], builderEvoItems: [] };
 
     for (const ep of episodes) {
       const s = ep.structured_summary as unknown as StructuredSummary | null;
@@ -92,8 +98,8 @@ const CategorySignals = ({ category }: Props) => {
         }
       }
 
-      for (const shift of s?.industry_shifts ?? []) {
-        shiftItems.push({ shift: shift.shift, evidence: shift.evidence });
+      for (const be of s?.builder_evolution ?? []) {
+        builderEvoItems.push({ item: be, creatorName, episodeTitle: ep.title });
       }
     }
 
@@ -101,22 +107,14 @@ const CategorySignals = ({ category }: Props) => {
       (a, b) => (TIMELINE_ORDER[a.timeline] ?? 3) - (TIMELINE_ORDER[b.timeline] ?? 3)
     );
 
-    return { horizonGroups, shiftItems };
+    builderEvoItems.sort((a, b) => b.item.score - a.item.score);
+
+    return { horizonGroups, builderEvoItems: builderEvoItems.slice(0, 15) };
   }, [episodes]);
 
   const handleMonitor = async (item: HorizonGroup) => {
     const sourcesText = item.sources.map((s) => `- ${s.creatorName} — ${s.episodeTitle}`).join("\n");
-    const prompt = `Monitor and report on: ${item.feature}
-
-Context: ${item.why_it_matters}
-
-When this ships or gets closer to release, I want to know:
-1. What exactly changed
-2. How it affects my stack (n8n, Lovable, Supabase, Claude API)
-3. What I should do within 48 hours of it shipping
-
-Sources:
-${sourcesText}`;
+    const prompt = `Monitor and report on: ${item.feature}\n\nContext: ${item.why_it_matters}\n\nSources:\n${sourcesText}`;
 
     const { error } = await supabase.from("pie_agent_briefs" as any).insert({
       title: `Monitor: ${item.feature}`,
@@ -131,11 +129,7 @@ ${sourcesText}`;
     toast({ title: "Added to monitoring queue" });
     setSavedMonitors((prev) => new Set(prev).add(item.feature));
     setTimeout(() => {
-      setSavedMonitors((prev) => {
-        const next = new Set(prev);
-        next.delete(item.feature);
-        return next;
-      });
+      setSavedMonitors((prev) => { const next = new Set(prev); next.delete(item.feature); return next; });
     }, 2000);
   };
 
@@ -149,7 +143,7 @@ ${sourcesText}`;
     );
   }
 
-  const isEmpty = horizonGroups.length === 0 && shiftItems.length === 0;
+  const isEmpty = horizonGroups.length === 0 && builderEvoItems.length === 0;
 
   if (isEmpty) {
     return (
@@ -166,6 +160,33 @@ ${sourcesText}`;
     <div className="space-y-8">
       <DayToggle value={days} onChange={setDays} />
 
+      {/* Builder Evolution Signals */}
+      {builderEvoItems.length > 0 && (
+        <section>
+          <h2 className="font-mono-pie text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+            Builder Evolution Signals
+          </h2>
+          <div className="space-y-2">
+            {builderEvoItems.map((entry, i) => (
+              <div key={i} className="rounded-lg border border-border bg-card p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge variant="outline" className={`text-[10px] ${scoreColor(entry.item.score)}`}>
+                    {entry.item.score}/10
+                  </Badge>
+                  <span className="text-sm font-semibold text-foreground">{entry.item.tool_or_pattern}</span>
+                </div>
+                {entry.item.replaces_or_upgrades && (
+                  <p className="text-[11px] text-muted-foreground">↗ {entry.item.replaces_or_upgrades}</p>
+                )}
+                <p className="text-[10px] text-muted-foreground/70 mt-1">
+                  {entry.creatorName} · {entry.episodeTitle}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* On the Horizon */}
       {horizonGroups.length > 0 && (
         <section>
@@ -178,10 +199,7 @@ ${sourcesText}`;
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-sm font-semibold text-foreground">{item.feature}</span>
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] ${TIMELINE_STYLE[item.timeline] ?? TIMELINE_STYLE.unknown}`}
-                    >
+                    <Badge variant="outline" className={`text-[10px] ${TIMELINE_STYLE[item.timeline] ?? TIMELINE_STYLE.unknown}`}>
                       {item.timeline}
                     </Badge>
                     {item.sources.length > 1 && (
@@ -212,25 +230,6 @@ ${sourcesText}`;
                     {src.creatorName} · {src.episodeTitle}
                   </p>
                 ))}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Industry Shifts */}
-      {shiftItems.length > 0 && (
-        <section>
-          <h2 className="font-mono-pie text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
-            Industry Shifts
-          </h2>
-          <div className="space-y-2">
-            {shiftItems.map((item, i) => (
-              <div key={i} className="rounded-lg border border-border bg-card p-4">
-                <p className="text-sm font-semibold text-foreground">{item.shift}</p>
-                <p className="mt-1 font-mono-pie text-xs leading-relaxed text-muted-foreground">
-                  {item.evidence}
-                </p>
               </div>
             ))}
           </div>
