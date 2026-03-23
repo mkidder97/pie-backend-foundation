@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Settings, Users, BarChart3, Bookmark } from "lucide-react";
+import { Settings, Users, BarChart3, Bookmark, SlidersHorizontal } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
