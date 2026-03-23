@@ -28,6 +28,7 @@ const App = () => (
             <Route path="/creators" element={<Creators />} />
             <Route path="/saved" element={<SavedBriefs />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/preferences" element={<Preferences />} />
             <Route path="/:category" element={<CategoryPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
