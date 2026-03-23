@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { PieEpisode, StructuredSummary, HorizonItem, IndustryShift } from "@/types/pie";
+import type { PieEpisode, StructuredSummary } from "@/types/pie";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,7 +48,6 @@ const CategoryRelay = ({ category }: Props) => {
 
       const { data, error } = await query;
       if (error) throw error;
-
       return data as unknown as PieEpisode[];
     },
   });
@@ -56,18 +55,18 @@ const CategoryRelay = ({ category }: Props) => {
   const eps = episodes ?? [];
 
   const stats = useMemo(() => {
-    let insights = 0, automations = 0, tools = 0, horizonItems = 0;
+    let builderEvo = 0, autonomy = 0, tools = 0, horizonItems = 0;
     const creators = new Set<string>();
     for (const ep of eps) {
       const s = ep.structured_summary as StructuredSummary | null;
       if (!s) continue;
       creators.add(ep.pie_creators?.name ?? "Unknown");
-      insights += s.actionable_insights?.length ?? 0;
-      automations += s.automation_opportunities?.length ?? 0;
+      builderEvo += s.builder_evolution?.length ?? 0;
+      autonomy += s.autonomy_multiplier?.length ?? 0;
       tools += s.tools_mentioned?.length ?? 0;
       horizonItems += s.on_the_horizon?.length ?? 0;
     }
-    return { episodes: eps.length, insights, automations, tools, creators: creators.size, horizonItems };
+    return { episodes: eps.length, builderEvo, autonomy, tools, creators: creators.size, horizonItems };
   }, [eps]);
 
   const markdown = useMemo(() => {
@@ -75,124 +74,106 @@ const CategoryRelay = ({ category }: Props) => {
     const range = rangeOptions.find((r) => r.value === days)?.label ?? "";
     const lines: string[] = [];
 
-    lines.push(`# PIE Intelligence Briefing (${range})`);
+    lines.push(`# PIE Intelligence Briefing — ${range}`);
     lines.push("");
     lines.push(`${stats.episodes} episodes processed from ${stats.creators} creators`);
     lines.push("");
 
-    const allInsights: string[] = [];
+    // Key Insights
+    const keyInsights: { insight: string; title: string }[] = [];
     for (const ep of eps) {
       const s = ep.structured_summary as StructuredSummary | null;
-      s?.actionable_insights?.forEach((t) => allInsights.push(t));
+      if (s?.key_insight) keyInsights.push({ insight: s.key_insight, title: ep.title });
     }
-    if (allInsights.length > 0) {
-      lines.push("## Actionable Insights");
+    if (keyInsights.length > 0) {
+      lines.push("## Key Insights");
       lines.push("");
-      allInsights.slice(0, 10).forEach((t) => lines.push(`- ${t}`));
+      keyInsights.forEach((k) => lines.push(`- ${k.insight} _(${k.title})_`));
       lines.push("");
     }
 
-    const allBuilds: string[] = [];
+    // Builder Evolution
+    const allBE: { item: { tool_or_pattern: string; replaces_or_upgrades: string; why_it_matters: string; score: number }; creator: string }[] = [];
     for (const ep of eps) {
       const s = ep.structured_summary as StructuredSummary | null;
-      s?.build_this_week?.forEach((t) => allBuilds.push(t));
+      s?.builder_evolution?.forEach((b) => allBE.push({ item: b, creator: ep.pie_creators?.name ?? "Unknown" }));
+    }
+    allBE.sort((a, b) => b.item.score - a.item.score);
+    if (allBE.length > 0) {
+      lines.push("## Builder Evolution");
+      lines.push("");
+      allBE.forEach(({ item }) => lines.push(`- [${item.score}/10] **${item.tool_or_pattern}** — ${item.why_it_matters} (↗ ${item.replaces_or_upgrades})`));
+      lines.push("");
+    }
+
+    // Autonomy Multipliers
+    const allAM: { item: { idea: string; steps_removed: string; score: number }; creator: string }[] = [];
+    for (const ep of eps) {
+      const s = ep.structured_summary as StructuredSummary | null;
+      s?.autonomy_multiplier?.forEach((a) => allAM.push({ item: a, creator: ep.pie_creators?.name ?? "Unknown" }));
+    }
+    allAM.sort((a, b) => b.item.score - a.item.score);
+    if (allAM.length > 0) {
+      lines.push("## Autonomy Multipliers");
+      lines.push("");
+      allAM.forEach(({ item }) => lines.push(`- [${item.score}/10] **${item.idea}** — ${item.steps_removed}`));
+      lines.push("");
+    }
+
+    // Emerging Stack
+    const allES: { item: { tool_or_method: string; who_is_adopting: string; why_ahead: string; score: number } }[] = [];
+    for (const ep of eps) {
+      const s = ep.structured_summary as StructuredSummary | null;
+      s?.emerging_stack?.forEach((e) => allES.push({ item: e }));
+    }
+    allES.sort((a, b) => b.item.score - a.item.score);
+    if (allES.length > 0) {
+      lines.push("## Emerging Stack");
+      lines.push("");
+      allES.forEach(({ item }) => lines.push(`- [${item.score}/10] **${item.tool_or_method}** — ${item.why_ahead} (Adopted by: ${item.who_is_adopting})`));
+      lines.push("");
+    }
+
+    // Build This Week
+    const allBuilds: { what: string; why_now: string; estimated_hours: number }[] = [];
+    for (const ep of eps) {
+      const s = ep.structured_summary as StructuredSummary | null;
+      s?.build_this_week?.forEach((b) => allBuilds.push(b));
     }
     if (allBuilds.length > 0) {
-      lines.push("## Build Ideas");
+      lines.push("## Build This Week");
       lines.push("");
-      allBuilds.slice(0, 8).forEach((t) => lines.push(`- ${t}`));
-      lines.push("");
-    }
-
-    // Startup & App Ideas
-    const allStartups: { concept: string; why_interesting: string }[] = [];
-    for (const ep of eps) {
-      const s = ep.structured_summary as StructuredSummary | null;
-      s?.startup_app_ideas?.forEach((idea) => allStartups.push(idea));
-    }
-    if (allStartups.length > 0) {
-      lines.push("## Startup & App Ideas");
-      lines.push("");
-      allStartups.slice(0, 8).forEach((a) => lines.push(`- ${a.concept} — ${a.why_interesting}`));
+      allBuilds.forEach((b) => lines.push(`- **${b.what}** (~${b.estimated_hours}h) — ${b.why_now}`));
       lines.push("");
     }
 
-    // Notable Quotes
-    const allQuotes: string[] = [];
+    // Tools to Recon
+    const reconTools = new Set<string>();
     for (const ep of eps) {
       const s = ep.structured_summary as StructuredSummary | null;
-      s?.notable_quotes?.forEach((q) => allQuotes.push(q));
+      s?.tools_mentioned?.filter((t) => t.recon_worthy).forEach((t) => reconTools.add(t.name));
     }
-    if (allQuotes.length > 0) {
-      lines.push("## Notable Quotes");
+    if (reconTools.size > 0) {
+      lines.push("## Tools to Recon");
       lines.push("");
-      allQuotes.slice(0, 5).forEach((q) => lines.push(`> ${q}`));
+      lines.push(Array.from(reconTools).join(", "));
       lines.push("");
     }
 
-    const allAutos: { idea: string; complexity: string }[] = [];
+    // On the Horizon
+    const allHorizon: { feature: string; timeline: string; why_it_matters: string; source: string }[] = [];
     for (const ep of eps) {
       const s = ep.structured_summary as StructuredSummary | null;
-      s?.automation_opportunities?.forEach((a) => allAutos.push(a));
-    }
-    if (allAutos.length > 0) {
-      lines.push("## Automation Opportunities");
-      lines.push("");
-      allAutos.slice(0, 8).forEach((a) => lines.push(`- [${a.complexity}] ${a.idea}`));
-      lines.push("");
-    }
-
-    const allHorizon: { item: HorizonItem; creator: string }[] = [];
-    for (const ep of eps) {
-      const s = ep.structured_summary as StructuredSummary | null;
-      const creator = ep.pie_creators?.name ?? "Unknown";
-      s?.on_the_horizon?.forEach((h) => allHorizon.push({ item: h, creator }));
+      s?.on_the_horizon?.forEach((h) => allHorizon.push(h));
     }
     if (allHorizon.length > 0) {
       lines.push("## On the Horizon");
       lines.push("");
-      allHorizon.forEach(({ item, creator }) =>
-        lines.push(`- [${item.timeline}] ${item.feature} — ${item.why_it_matters} (Source: ${creator})`)
-      );
+      allHorizon.forEach((h) => lines.push(`- [${h.timeline}] ${h.feature} — ${h.why_it_matters} (Source: ${h.source})`));
       lines.push("");
     }
 
-    const allShifts: IndustryShift[] = [];
-    for (const ep of eps) {
-      const s = ep.structured_summary as StructuredSummary | null;
-      s?.industry_shifts?.forEach((shift) => allShifts.push(shift));
-    }
-    if (allShifts.length > 0) {
-      lines.push("## Industry Shifts");
-      lines.push("");
-      allShifts.forEach((s) => lines.push(`- ${s.shift} — ${s.evidence}`));
-      lines.push("");
-    }
-
-    const toolNames = new Set<string>();
-    for (const ep of eps) {
-      const s = ep.structured_summary as StructuredSummary | null;
-      s?.tools_mentioned?.forEach((t) => toolNames.add(t.name));
-    }
-    if (toolNames.size > 0) {
-      lines.push("## Tools & Platforms Mentioned");
-      lines.push("");
-      lines.push(Array.from(toolNames).join(", "));
-      lines.push("");
-    }
-
-    const allConcepts: { concept: string; explanation: string }[] = [];
-    for (const ep of eps) {
-      const s = ep.structured_summary as StructuredSummary | null;
-      s?.key_ideas?.forEach((k) => allConcepts.push(k));
-    }
-    if (allConcepts.length > 0) {
-      lines.push("## Key Concepts");
-      lines.push("");
-      allConcepts.slice(0, 8).forEach((k) => lines.push(`- **${k.concept}**: ${k.explanation}`));
-      lines.push("");
-    }
-
+    // Episode Breakdown
     lines.push("## Episode Breakdown");
     lines.push("");
     for (const ep of eps) {
@@ -200,8 +181,7 @@ const CategoryRelay = ({ category }: Props) => {
       const date = ep.published_at ? format(new Date(ep.published_at), "MMM d, yyyy") : "Unknown date";
       lines.push(`### ${ep.title}`);
       lines.push(`${ep.pie_creators?.name ?? "Unknown"} — ${date}`);
-      lines.push("");
-      s?.executive_summary?.slice(0, 3).forEach((t) => lines.push(`- ${t}`));
+      if (s?.key_insight) lines.push(`> ${s.key_insight}`);
       lines.push("");
     }
 
@@ -264,8 +244,7 @@ My stack: n8n (mkidder97.app.n8n.cloud), Lovable (React/TypeScript/Tailwind/shad
         </p>
       </div>
 
-      {/* Hero CTA */}
-      <div className="space-y-2">
+      <div className="flex flex-wrap gap-2">
         <Button
           size="lg"
           onClick={handleCopy}
@@ -291,9 +270,6 @@ My stack: n8n (mkidder97.app.n8n.cloud), Lovable (React/TypeScript/Tailwind/shad
             Save
           </Button>
         )}
-        <p className="text-[11px] text-muted-foreground leading-relaxed max-w-md">
-          Copy this briefing and start a new Claude conversation to get personalized analysis and next actions.
-        </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -310,37 +286,33 @@ My stack: n8n (mkidder97.app.n8n.cloud), Lovable (React/TypeScript/Tailwind/shad
       </div>
 
       {isLoading ? (
-        <div className="flex gap-2">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-6 w-24" />
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="text-[11px]">{stats.episodes} episodes</Badge>
-          <Badge variant="outline" className="text-[11px]">{stats.insights} insights</Badge>
-          <Badge variant="outline" className="text-[11px]">{stats.automations} automations</Badge>
-          <Badge variant="outline" className="text-[11px]">{stats.tools} tool mentions</Badge>
-          <Badge variant="outline" className="text-[11px]">{stats.horizonItems} horizon items</Badge>
-        </div>
-      )}
-
-      {isLoading ? (
         <Skeleton className="h-96 w-full" />
-      ) : markdown ? (
-        <Card className="border-border bg-card">
-          <CardContent className="p-4">
-            <pre className="font-mono-pie text-xs text-foreground/90 whitespace-pre-wrap max-h-[600px] overflow-y-auto leading-relaxed">
-              {markdown}
-            </pre>
-          </CardContent>
-        </Card>
       ) : (
-        <Card className="border-border bg-card">
-          <CardContent className="py-16 text-center">
-            <p className="text-sm text-muted-foreground">No completed episodes in this time range.</p>
-          </CardContent>
-        </Card>
+        <>
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="outline" className="text-[11px]">{stats.episodes} episodes</Badge>
+            <Badge variant="outline" className="text-[11px]">{stats.builderEvo} builder evo</Badge>
+            <Badge variant="outline" className="text-[11px]">{stats.autonomy} autonomy</Badge>
+            <Badge variant="outline" className="text-[11px]">{stats.tools} tools</Badge>
+            <Badge variant="outline" className="text-[11px]">{stats.horizonItems} horizon</Badge>
+          </div>
+
+          {markdown ? (
+            <Card className="border-border bg-card">
+              <CardContent className="p-4">
+                <pre className="font-mono-pie text-xs text-foreground/90 whitespace-pre-wrap max-h-[600px] overflow-y-auto leading-relaxed">
+                  {markdown}
+                </pre>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-border bg-card">
+              <CardContent className="py-16 text-center">
+                <p className="text-sm text-muted-foreground">No completed episodes in this time range.</p>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </div>
   );

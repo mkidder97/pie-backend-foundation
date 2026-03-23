@@ -36,7 +36,7 @@ function computeStats(creators: Creator[], episodes: PieEpisode[]): CreatorStats
     for (const ep of eps) {
       const s = ep.structured_summary as StructuredSummary | null;
       if (!s) continue;
-      insights += s.actionable_insights?.length ?? 0;
+      insights += (s.builder_evolution?.length ?? 0) + (s.autonomy_multiplier?.length ?? 0) + (s.emerging_stack?.length ?? 0);
       builds += s.build_this_week?.length ?? 0;
       s.tools_mentioned?.forEach((t) => {
         const key = t.name.toLowerCase();

@@ -1,77 +1,81 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { subDays } from "date-fns";
-import type { PieEpisode, StructuredSummary } from "@/types/pie";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { ChevronRight, Search } from "lucide-react";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Search, Plus, ExternalLink, User } from "lucide-react";
 
-interface ToolEntry {
-  name: string;
-  count: number;
-  contexts: { episodeTitle: string; context: string; creatorName: string }[];
-  categories: Set<string>;
+interface ToolRecon {
+  id: string;
+  tool_name: string;
+  website_url: string | null;
+  builder_evolution_score: number | null;
+  builder_evolution_reason: string | null;
+  autonomy_multiplier_score: number | null;
+  autonomy_multiplier_reason: string | null;
+  emerging_stack_score: number | null;
+  emerging_stack_reason: string | null;
+  total_score: number | null;
+  replaces_or_upgrades: string | null;
+  integrations: string[] | null;
+  use_cases: string[] | null;
+  solo_viable: boolean | null;
+  verdict: string | null;
+  recon_summary: string | null;
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  src_tools: "SRC Tools",
-  stack_watch: "Stack Watch",
-  finance: "Finance",
-  opportunities: "Opportunities",
-};
+function totalScoreColor(score: number): string {
+  if (score >= 23) return "bg-emerald-500/20 text-emerald-400 border-emerald-500/40";
+  if (score >= 15) return "bg-yellow-500/20 text-yellow-400 border-yellow-500/40";
+  return "bg-muted text-muted-foreground border-border";
+}
+
+function miniBar(score: number | null, label: string) {
+  const s = score ?? 0;
+  const pct = (s / 10) * 100;
+  return (
+    <div className="flex items-center gap-1.5 text-[10px]">
+      <span className="w-8 text-muted-foreground shrink-0">{label}</span>
+      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+        <div
+          className={`h-full rounded-full ${s >= 8 ? "bg-emerald-500" : s >= 5 ? "bg-yellow-500" : "bg-muted-foreground"}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span className="w-5 text-right text-muted-foreground">{s}</span>
+    </div>
+  );
+}
 
 const Tools = () => {
-  const [expanded, setExpanded] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [thisWeek, setThisWeek] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [toolName, setToolName] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const { data: tools, isLoading } = useQuery({
-    queryKey: ["pie-tools-enhanced", thisWeek],
+    queryKey: ["pie-tool-recon"],
     queryFn: async () => {
-      const since = subDays(new Date(), thisWeek ? 7 : 30).toISOString();
       const { data, error } = await supabase
-        .from("pie_episodes")
-        .select("title, structured_summary, pie_creators(name, category)")
-        .eq("status", "completed")
-        .gte("published_at", since);
+        .from("pie_tool_recon")
+        .select("*")
+        .order("total_score", { ascending: false });
       if (error) throw error;
-
-      const map = new Map<string, { contexts: { episodeTitle: string; context: string; creatorName: string }[]; categories: Set<string> }>();
-      const caseMap = new Map<string, string>();
-
-      for (const ep of data as any[]) {
-        const s = ep.structured_summary as StructuredSummary | null;
-        const creatorName = ep.pie_creators?.name ?? "Unknown";
-        const creatorCategory = ep.pie_creators?.category ?? "src_tools";
-
-        for (const t of s?.tools_mentioned ?? []) {
-          const key = t.name.toLowerCase().trim();
-          if (!caseMap.has(key)) caseMap.set(key, t.name);
-
-          const existing = map.get(key) ?? { contexts: [], categories: new Set<string>() };
-          existing.contexts.push({ episodeTitle: ep.title, context: t.context, creatorName });
-          existing.categories.add(creatorCategory);
-          map.set(key, existing);
-        }
-      }
-
-      const entries: ToolEntry[] = Array.from(map.entries()).map(([key, val]) => ({
-        name: caseMap.get(key) ?? key,
-        count: val.contexts.length,
-        contexts: val.contexts,
-        categories: val.categories,
-      }));
-
-      entries.sort((a, b) => b.count - a.count);
-      return entries;
+      return data as unknown as ToolRecon[];
     },
   });
 
@@ -79,27 +83,44 @@ const Tools = () => {
     if (!tools) return [];
     if (!search.trim()) return tools;
     const q = search.toLowerCase();
-    return tools.filter((t) => t.name.toLowerCase().includes(q));
+    return tools.filter(
+      (t) =>
+        t.tool_name.toLowerCase().includes(q) ||
+        t.integrations?.some((i) => i.toLowerCase().includes(q))
+    );
   }, [tools, search]);
 
-  // Group by category
-  const grouped = useMemo(() => {
-    const groups = new Map<string, ToolEntry[]>();
-    for (const tool of filtered) {
-      const cats = Array.from(tool.categories);
-      const primary = cats[0] ?? "src_tools";
-      const arr = groups.get(primary) ?? [];
-      arr.push(tool);
-      groups.set(primary, arr);
+  const handleAddTool = async () => {
+    if (!toolName.trim()) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch("https://mkidder97.app.n8n.cloud/webhook/pie-tool-recon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tool_name: toolName.trim(),
+          website_url: websiteUrl.trim() || null,
+          source_episode_id: null,
+          manually_added: true,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      toast({ title: "Tool submitted for recon" });
+      setToolName("");
+      setWebsiteUrl("");
+      setAddOpen(false);
+    } catch {
+      toast({ title: "Error submitting tool", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
     }
-    return groups;
-  }, [filtered]);
+  };
 
   if (isLoading) {
     return (
       <div className="space-y-2">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full" />
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-28 w-full" />
         ))}
       </div>
     );
@@ -108,27 +129,45 @@ const Tools = () => {
   return (
     <div className="space-y-6">
       <h1 className="font-mono-pie text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-        Tools Mentioned — {thisWeek ? "This Week" : "Last 30 Days"}
+        Tool Recon
       </h1>
 
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Filter tools..."
+            placeholder="Filter tools or integrations..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-8 pl-8 text-xs"
           />
         </div>
-        <Button
-          size="sm"
-          variant={thisWeek ? "default" : "outline"}
-          className="h-8 text-xs"
-          onClick={() => setThisWeek(!thisWeek)}
-        >
-          This Week
-        </Button>
+        <Dialog open={addOpen} onOpenChange={setAddOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" className="h-8 gap-1 text-xs">
+              <Plus className="h-3 w-3" />
+              Add Tool
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Submit Tool for Recon</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 pt-2">
+              <div>
+                <Label className="text-xs">Tool Name</Label>
+                <Input value={toolName} onChange={(e) => setToolName(e.target.value)} placeholder="e.g. Windsurf" className="mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs">Website URL (optional)</Label>
+                <Input value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://..." className="mt-1" />
+              </div>
+              <Button onClick={handleAddTool} disabled={submitting || !toolName.trim()} className="w-full">
+                {submitting ? "Submitting..." : "Submit for Recon"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {filtered.length === 0 ? (
@@ -136,50 +175,59 @@ const Tools = () => {
           No tools found.
         </p>
       ) : (
-        <div className="space-y-6">
-          {Array.from(grouped.entries()).map(([cat, catTools]) => (
-            <div key={cat}>
-              <h2 className="font-mono-pie text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                {CATEGORY_LABELS[cat] ?? cat}
-              </h2>
-              <div className="space-y-1">
-                {catTools.map((tool) => {
-                  const creators = [...new Set(tool.contexts.map((c) => c.creatorName))];
-                  return (
-                    <Collapsible
-                      key={tool.name}
-                      open={expanded === tool.name}
-                      onOpenChange={(open) => setExpanded(open ? tool.name : null)}
-                    >
-                      <CollapsibleTrigger className="flex w-full items-center gap-3 rounded px-3 py-2 text-left transition-colors hover:bg-accent">
-                        <ChevronRight
-                          className={`h-3 w-3 shrink-0 text-muted-foreground transition-transform ${expanded === tool.name ? "rotate-90" : ""}`}
-                        />
-                        <span className="flex-1 text-sm font-medium text-foreground">{tool.name}</span>
-                        <span className="text-[10px] text-muted-foreground mr-2 hidden sm:inline">
-                          {creators.slice(0, 2).join(", ")}{creators.length > 2 ? ` +${creators.length - 2}` : ""}
-                        </span>
-                        <Badge variant="secondary" className="text-[10px]">
-                          {tool.count} mention{tool.count > 1 ? "s" : ""}
+        <div className="space-y-3">
+          {filtered.map((tool) => (
+            <Card key={tool.id} className="transition-colors hover:bg-accent/50">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      {tool.website_url ? (
+                        <a href={tool.website_url} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-foreground hover:text-primary flex items-center gap-1">
+                          {tool.tool_name}
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ) : (
+                        <span className="text-sm font-semibold text-foreground">{tool.tool_name}</span>
+                      )}
+                      {tool.solo_viable && (
+                        <Badge variant="outline" className="text-[10px] border-emerald-500/40 text-emerald-400">
+                          <User className="h-2.5 w-2.5 mr-0.5" />
+                          Solo Viable
                         </Badge>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <div className="ml-9 space-y-2 pb-2">
-                          {tool.contexts.map((ctx, i) => (
-                            <div key={i} className="rounded border border-border bg-card p-2">
-                              <p className="font-mono-pie text-[11px] leading-relaxed text-foreground">{ctx.context}</p>
-                              <p className="mt-1 text-[10px] text-muted-foreground">
-                                {ctx.creatorName} · {ctx.episodeTitle}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  );
-                })}
-              </div>
-            </div>
+                      )}
+                    </div>
+                    {tool.replaces_or_upgrades && (
+                      <p className="text-[11px] text-muted-foreground mt-0.5">↗ {tool.replaces_or_upgrades}</p>
+                    )}
+                  </div>
+                  <Badge variant="outline" className={`shrink-0 text-xs font-bold ${totalScoreColor(tool.total_score ?? 0)}`}>
+                    {tool.total_score ?? 0}/30
+                  </Badge>
+                </div>
+
+                <div className="space-y-1 mb-2">
+                  {miniBar(tool.builder_evolution_score, "BLD")}
+                  {miniBar(tool.autonomy_multiplier_score, "AUT")}
+                  {miniBar(tool.emerging_stack_score, "EMG")}
+                </div>
+
+                {tool.verdict && (
+                  <p className="text-xs italic text-muted-foreground mb-1">{tool.verdict}</p>
+                )}
+                {tool.recon_summary && (
+                  <p className="font-mono-pie text-[11px] leading-relaxed text-muted-foreground mb-2">{tool.recon_summary}</p>
+                )}
+
+                {(tool.integrations?.length ?? 0) > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {tool.integrations!.map((int, i) => (
+                      <Badge key={i} variant="secondary" className="text-[10px]">{int}</Badge>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}

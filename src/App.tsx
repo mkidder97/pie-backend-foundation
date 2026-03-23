@@ -9,6 +9,7 @@ import Tools from "@/pages/Tools";
 import Creators from "@/pages/Creators";
 import Admin from "@/pages/Admin";
 import SavedBriefs from "@/pages/SavedBriefs";
+import Preferences from "@/pages/Preferences";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/creators" element={<Creators />} />
             <Route path="/saved" element={<SavedBriefs />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/preferences" element={<Preferences />} />
             <Route path="/:category" element={<CategoryPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
