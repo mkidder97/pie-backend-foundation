@@ -53,7 +53,7 @@ const Tools = () => {
   const [search, setSearch] = useState("");
   const { toast } = useToast();
 
-  const { data: episodes, isLoading } = useQuery({
+  const { data: episodes, isLoading, error } = useQuery({
     queryKey: ["pie-episodes-tools-agg"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -61,7 +61,7 @@ const Tools = () => {
         .select("structured_summary")
         .eq("status", "completed");
       if (error) throw error;
-      return data as { structured_summary: unknown }[];
+      return (data ?? []) as { structured_summary: unknown }[];
     },
   });
 
