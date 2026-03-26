@@ -39,7 +39,8 @@ function computeStats(creators: Creator[], episodes: PieEpisode[]): CreatorStats
       insights += (s.builder_evolution?.length ?? 0) + (s.autonomy_multiplier?.length ?? 0) + (s.emerging_stack?.length ?? 0);
       builds += s.build_this_week?.length ?? 0;
       s.tools_mentioned?.forEach((t) => {
-        const key = t.name.toLowerCase();
+        const key = (t.name || '').toLowerCase();
+        if (!key) return;
         toolMap.set(key, (toolMap.get(key) ?? 0) + 1);
       });
       if (ep.published_at && (!latestDate || ep.published_at > latestDate)) {
