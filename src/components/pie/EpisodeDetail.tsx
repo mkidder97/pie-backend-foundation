@@ -1,4 +1,4 @@
-import { ExternalLink, Zap, Star } from "lucide-react";
+import { ExternalLink, Zap, Star, Wrench } from "lucide-react";
 import type { PieEpisode, StructuredSummary } from "@/types/pie";
 import { getSourceBadge } from "@/pages/Feed";
 import {
@@ -33,6 +33,23 @@ const SectionHeader = ({ children }: { children: React.ReactNode }) => (
   <h3 className="font-mono-pie text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2 mt-6">
     {children}
   </h3>
+);
+
+const MiniLabel = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <span className={`text-[9px] font-semibold uppercase tracking-wider ${className}`}>{children}</span>
+);
+
+const BeforeAfterBlock = ({ before, after }: { before: string; after: string }) => (
+  <div className="space-y-1 mt-2">
+    <div className="border-l-2 border-rose-500/40 pl-2">
+      <MiniLabel className="text-rose-400">Before</MiniLabel>
+      <p className="text-[11px] text-muted-foreground">{before}</p>
+    </div>
+    <div className="border-l-2 border-emerald-500/40 pl-2">
+      <MiniLabel className="text-emerald-400">After</MiniLabel>
+      <p className="text-[11px] text-emerald-400">{after}</p>
+    </div>
+  </div>
 );
 
 const EpisodeDetail = ({ episode, open, onOpenChange }: EpisodeDetailProps) => {
@@ -103,6 +120,41 @@ const EpisodeDetail = ({ episode, open, onOpenChange }: EpisodeDetailProps) => {
                       <p className="text-[11px] text-muted-foreground">↗ {item.replaces_or_upgrades}</p>
                     )}
                     <p className="font-mono-pie text-[11px] leading-relaxed text-muted-foreground mt-0.5">{item.why_it_matters}</p>
+
+                    {item.what_is_new && (
+                      <div className="border-l-4 border-emerald-500 bg-emerald-500/10 p-2 mt-2 rounded-sm">
+                        <MiniLabel className="text-emerald-400">What Is New</MiniLabel>
+                        <p className="text-[11px] text-foreground mt-0.5">{item.what_is_new}</p>
+                      </div>
+                    )}
+
+                    {item.workflow_breakdown && (
+                      <div className="mt-2 border border-border rounded p-2 bg-muted/30">
+                        <div className="flex items-center gap-1 mb-1.5">
+                          <Wrench className="h-3 w-3 text-muted-foreground" />
+                          <MiniLabel className="text-muted-foreground">How To Implement</MiniLabel>
+                        </div>
+                        <ol className="list-decimal list-inside space-y-0.5">
+                          {item.workflow_breakdown.workflow_steps.map((step, si) => (
+                            <li key={si} className="text-[11px] text-foreground">{step}</li>
+                          ))}
+                        </ol>
+                        <BeforeAfterBlock
+                          before={item.workflow_breakdown.before_state}
+                          after={item.workflow_breakdown.after_state}
+                        />
+                        {item.workflow_breakdown.tools_required.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {item.workflow_breakdown.tools_required.map((tool, ti) => (
+                              <Badge key={ti} variant="secondary" className="text-[9px]">{tool}</Badge>
+                            ))}
+                          </div>
+                        )}
+                        <Badge variant="outline" className="text-[9px] mt-1.5 border-emerald-500/40 text-emerald-400">
+                          ~{item.workflow_breakdown.setup_time_hours}h setup
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -118,12 +170,22 @@ const EpisodeDetail = ({ episode, open, onOpenChange }: EpisodeDetailProps) => {
                   <div key={i} className="rounded border border-border bg-card p-2.5">
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <span className="text-xs font-semibold text-foreground">{item.idea}</span>
-                      <Badge variant="outline" className={`text-[10px] ${scoreColor(item.score)}`}>
-                        {item.score}/10
-                      </Badge>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {(item.time_saved_per_week_hours ?? 0) > 0 && (
+                          <Badge variant="outline" className="text-[9px] border-emerald-500/40 text-emerald-400">
+                            saves ~{item.time_saved_per_week_hours}h/week
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className={`text-[10px] ${scoreColor(item.score)}`}>
+                          {item.score}/10
+                        </Badge>
+                      </div>
                     </div>
                     <p className="text-[11px] text-muted-foreground">⚡ {item.steps_removed}</p>
                     <p className="font-mono-pie text-[11px] leading-relaxed text-muted-foreground mt-0.5">{item.current_friction_eliminated}</p>
+                    {item.before_state && item.after_state && (
+                      <BeforeAfterBlock before={item.before_state} after={item.after_state} />
+                    )}
                   </div>
                 ))}
               </div>
@@ -143,6 +205,9 @@ const EpisodeDetail = ({ episode, open, onOpenChange }: EpisodeDetailProps) => {
                         {item.score}/10
                       </Badge>
                     </div>
+                    {item.what_it_is && (
+                      <p className="text-[11px] text-foreground mb-0.5">{item.what_it_is}</p>
+                    )}
                     <p className="text-[11px] text-muted-foreground">Adopted by: {item.who_is_adopting}</p>
                     <p className="font-mono-pie text-[11px] leading-relaxed text-muted-foreground mt-0.5">{item.why_ahead}</p>
                   </div>
@@ -161,6 +226,13 @@ const EpisodeDetail = ({ episode, open, onOpenChange }: EpisodeDetailProps) => {
                     <div className="min-w-0">
                       <p className="text-xs font-semibold text-foreground">{item.what}</p>
                       <p className="text-[11px] text-muted-foreground">{item.why_now}</p>
+                      {(item.tools_involved?.length ?? 0) > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {item.tools_involved!.map((tool, ti) => (
+                            <Badge key={ti} variant="secondary" className="text-[9px]">{tool}</Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <Badge variant="outline" className="shrink-0 text-[10px] text-emerald-400 border-emerald-500/40">
                       ~{item.estimated_hours}h
@@ -175,22 +247,30 @@ const EpisodeDetail = ({ episode, open, onOpenChange }: EpisodeDetailProps) => {
           {(s.tools_mentioned?.length ?? 0) > 0 && (
             <>
               <SectionHeader>Tools Mentioned</SectionHeader>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="space-y-1.5">
                 {s.tools_mentioned!.map((t, i) => (
-                  <span key={i} className="inline-flex items-center gap-1">
-                    {t.url ? (
-                      <a href={t.url} target="_blank" rel="noopener noreferrer">
-                        <Badge variant="secondary" className="text-[10px] hover:bg-accent cursor-pointer">
-                          {t.name}
-                        </Badge>
-                      </a>
-                    ) : (
-                      <Badge variant="secondary" className="text-[10px]">{t.name}</Badge>
+                  <div key={i}>
+                    <span className="inline-flex items-center gap-1">
+                      {t.url ? (
+                        <a href={t.url} target="_blank" rel="noopener noreferrer">
+                          <Badge variant="secondary" className="text-[10px] hover:bg-accent cursor-pointer">
+                            {t.name}
+                          </Badge>
+                        </a>
+                      ) : (
+                        <Badge variant="secondary" className="text-[10px]">{t.name}</Badge>
+                      )}
+                      {t.recon_worthy && (
+                        <Star className="h-3 w-3 text-orange-400 fill-orange-400" />
+                      )}
+                    </span>
+                    {t.what_is_new_about_it && t.what_is_new_about_it.length > 0 && (
+                      <p className="font-mono-pie text-[10px] text-muted-foreground mt-0.5 ml-1 flex items-center gap-1">
+                        <Zap className="h-2.5 w-2.5 text-yellow-400 shrink-0" />
+                        {t.what_is_new_about_it}
+                      </p>
                     )}
-                    {t.recon_worthy && (
-                      <Star className="h-3 w-3 text-orange-400 fill-orange-400" />
-                    )}
-                  </span>
+                  </div>
                 ))}
               </div>
             </>

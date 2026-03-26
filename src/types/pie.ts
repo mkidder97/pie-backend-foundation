@@ -1,8 +1,18 @@
+export interface WorkflowBreakdown {
+  workflow_steps: string[];
+  tools_required: string[];
+  before_state: string;
+  after_state: string;
+  setup_time_hours: number;
+}
+
 export interface BuilderEvolutionItem {
   tool_or_pattern: string;
   why_it_matters: string;
   replaces_or_upgrades: string;
   score: number;
+  what_is_new?: string;
+  workflow_breakdown?: WorkflowBreakdown;
 }
 
 export interface AutonomyMultiplierItem {
@@ -10,6 +20,9 @@ export interface AutonomyMultiplierItem {
   steps_removed: string;
   current_friction_eliminated: string;
   score: number;
+  before_state?: string;
+  after_state?: string;
+  time_saved_per_week_hours?: number;
 }
 
 export interface EmergingStackItem {
@@ -17,6 +30,7 @@ export interface EmergingStackItem {
   who_is_adopting: string;
   why_ahead: string;
   score: number;
+  what_it_is?: string;
 }
 
 export interface ToolMentioned {
@@ -24,12 +38,14 @@ export interface ToolMentioned {
   url: string;
   category: string;
   recon_worthy: boolean;
+  what_is_new_about_it?: string;
 }
 
 export interface BuildThisWeekItem {
   what: string;
   why_now: string;
   estimated_hours: number;
+  tools_involved?: string[];
 }
 
 export interface HorizonItem {
