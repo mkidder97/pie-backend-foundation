@@ -71,7 +71,7 @@ const Feed = () => {
   ];
 
   return (
-    <>
+    <div data-testid="feed-container">
       <div className="mb-4 flex gap-1">
         {filters.map((f) => (
           <Button
@@ -96,6 +96,7 @@ const Feed = () => {
           return (
             <Card
               key={ep.id}
+              data-testid="episode-card"
               className="cursor-pointer transition-colors hover:bg-accent/50"
               onClick={() => setSelected(ep)}
             >
@@ -146,7 +147,7 @@ const Feed = () => {
         open={!!selected}
         onOpenChange={(open) => !open && setSelected(null)}
       />
-    </>
+    </div>
   );
 };
 

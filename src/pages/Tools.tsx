@@ -85,7 +85,7 @@ const Tools = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-mono-pie text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+      <h1 data-testid="tools-heading" className="font-mono-pie text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         Tools Mentioned
       </h1>
 

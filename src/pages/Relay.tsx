@@ -228,7 +228,7 @@ My stack: n8n (mkidder97.app.n8n.cloud), Lovable (React/TypeScript/Tailwind/shad
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-mono-pie text-lg font-bold text-foreground">Relay to Claude</h1>
+        <h1 data-testid="relay-heading" className="font-mono-pie text-lg font-bold text-foreground">Relay to Claude</h1>
         <p className="text-xs text-muted-foreground mt-1">
           Curated briefing formatted for pasting into Claude.
         </p>
